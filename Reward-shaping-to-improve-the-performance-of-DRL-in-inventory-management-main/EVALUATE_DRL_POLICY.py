@@ -10,6 +10,7 @@ from pandas import DataFrame
 x = 0
 
 #Define the parameters
+# ciao
 MEAN_DEMAND = 4
 CV = 0.5
 LIFETIME = 2
