@@ -195,7 +195,7 @@ class DQN_Agent():
 			scores.append(-avg_score)
 
 		df = DataFrame({'Reward': scores})
-		path = "C:\Users\ebrambatti\Desktop\bramdemoor"
+		path = r'..\\rewardshaping\\test_dqn'
 		df.to_excel(str(path) + str(self.x) + '/EVAL' + str(self.x) + '/Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.xlsx')
 		self.model.save(str(path) + '/EVAL' + str(self.x) + '/Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.h5')
 		return scores

@@ -94,7 +94,7 @@ def test_model(trained_DQN):
 scores = [[0 for i in range(12)] for j in range(50)]
 averages = []
 for i in range(50):
-	path = "C:\\Users\\ebrambatti\\Desktop\\bramdemoor"
+	path = r'..\\rewardshaping\\test_dqn'
 	scores[i], avg = test_model(str(path) + str(x) + '\\Lifetime ' + str(LIFETIME) + ' - iteration ' + str(i) + '.h5')
 	averages.append(avg)
 overall_avg = mean(averages)
