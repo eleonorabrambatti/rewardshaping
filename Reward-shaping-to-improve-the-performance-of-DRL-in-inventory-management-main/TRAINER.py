@@ -27,7 +27,7 @@ EPSILON_DECAY = 0.997
 PSI_DECAY = 0.99 # non usato
 EPSILON_MIN = 0.01
 LEARNING_RATE = 0.001
-EPOCHS = 1
+EPOCHS = 10
 BATCH_SIZE = 32
 UPDATE = 20
 #################################
