@@ -53,7 +53,7 @@ class DQN_Agent():
 		model.add(Dense(32, activation = 'relu'))
 		model.add(Dense(self.action_size, activation = 'linear'))
 
-		model.compile(loss = losses.mean_squared_error, optimizer = Adam(lr = self.learning_rate))
+		model.compile(loss = losses.mean_squared_error, optimizer = Adam(learning_rate = self.learning_rate))
 
 		return model
 
@@ -143,8 +143,8 @@ class DQN_Agent():
 
 				in_inv = 0
 				for i in range(self.env.leadtime + self.env.lifetime - 1):
-					in_inv += state[0][i]
-				bsp_order = max(0, self.base_stock - in_inv)
+					in_inv += state[0][i] # sommo sui prodotti degli ultimi due giorni che sono entrambi il mio inventario(ho piu' unita' dello stesso prodotto)
+				bsp_order = max(0, self.base_stock - in_inv) #l 'azioe che voglio e' quella per ripristinare lo stock in base stock fissato quindi devo agire ordinando la differenza
 				cur_val = -self.factor * abs(bsp_order - action)
 				F = cur_val - ((1/self.gamma)*prev_val)
 				prev_val = cur_val
@@ -162,10 +162,10 @@ class DQN_Agent():
 
 			scores.append(-avg_score)
 
-		path = r'..\\rewardshaping\\test_dqn'
+		path = r'..\\rewardshaping\\test_dqn_shapedB'
 		df = DataFrame({'Reward': scores})
-		df.to_excel(str(path) + '/EVAL' + str(self.x) + '/Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.xlsx')
-		self.model.save('C:/Users/u0139451/Documents/Reward shaping/Code/EVAL' + str(self.x) + '/Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.h5')
+		# df.to_excel(str(path) + '/EVAL' + str(self.x) + '/Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.xlsx')
+		self.model.save(str(path) + str(self.x) + '\\Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.h5')
 		return scores
 
 	def save(self, name):

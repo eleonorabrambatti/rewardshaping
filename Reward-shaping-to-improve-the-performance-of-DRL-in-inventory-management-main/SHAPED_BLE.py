@@ -13,8 +13,8 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import pandas as pd
 from pandas import DataFrame
-
-
+FIFO =True
+LIFO= False
 class DQN_Agent():
 
 	def __init__(self, state_size, action_size, gamma, epsilon_decay, epsilon_min, learning_rate, epochs, env, batch_size, update, iteration, S1, S2, b, factor, x):
@@ -58,7 +58,7 @@ class DQN_Agent():
 		model.add(Dense(32, activation = 'relu'))
 		model.add(Dense(self.action_size, activation = 'linear'))
 
-		model.compile(loss = losses.mean_squared_error, optimizer = Adam(lr = self.learning_rate))
+		model.compile(loss = losses.mean_squared_error, optimizer = Adam(learning_rate = self.learning_rate))
 
 		return model
 
@@ -195,9 +195,9 @@ class DQN_Agent():
 			scores.append(-avg_score)
 
 		df = DataFrame({'Reward': scores})
-		path = r'..\\rewardshaping\\test_dqn'
-		df.to_excel(str(path) + str(self.x) + '/EVAL' + str(self.x) + '/Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.xlsx')
-		self.model.save(str(path) + '/EVAL' + str(self.x) + '/Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.h5')
+		path = r'..\\rewardshaping\\test_dqn_shapedBLE'
+		#df.to_excel(str(path) + str(self.x) + '/EVAL' + str(self.x) + '/Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.xlsx')
+		self.model.save(str(path) + str(self.x) + '\\Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.h5')
 		return scores
 
 	def save(self, name):

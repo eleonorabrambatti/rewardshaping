@@ -34,6 +34,8 @@ class DQN_Agent():
 		self.batch_size = batch_size
 		self.update = update
 		self.epoch_counter = 0
+		self.count=0
+		self.count1=0
 		self.epsilon = 1.0
 		self.iteration = iteration
 		self.x = x
@@ -57,11 +59,13 @@ class DQN_Agent():
 
 
 	def act(self, state):
-
 		if np.random.rand() <= self.epsilon:
+			self.count+=1
 			return random.randrange(self.action_size)
 		#print(state)
 		act_values = self.model.predict(state)
+		self.count1+=1
+
 		return np.argmax(act_values[0])
 
 
@@ -74,15 +78,19 @@ class DQN_Agent():
 
 		#experience replay from replay memory
 		minibatch = random.sample(self.memory, self.batch_size)
+		print(f'minibatch {minibatch}\n')
 		current_states = np.array([experience[0] for experience in minibatch])
+		print(f'current_states {current_states}\n')
 		current_qs_list = np.zeros((self.batch_size, 1, self.env.max_order + 1))
 		for k in range(self.batch_size):
 			current_qs_list[k] = self.model.predict(current_states[k])
+		print(f'current_qs_list {current_qs_list}\n')
 
 		new_states = np.array([experience[3] for experience in minibatch])
 		future_qs_list = np.zeros((self.batch_size, 1, self.env.max_order + 1))
 		for k in range(self.batch_size):
 			future_qs_list[k] = self.target_model.predict(new_states[k])
+		print(f'future_qs_list {future_qs_list}\n')
 
 		x = []
 		y = []
@@ -96,6 +104,7 @@ class DQN_Agent():
 				new_q = reward
 
 			current_qs = current_qs_list[i]
+			print(f'current_qs {current_qs}\n')
 			current_qs[0][action] = new_q
 			x.append(current_state[0])
 			y.append(current_qs[0])
@@ -130,7 +139,8 @@ class DQN_Agent():
 			done = False
 			score = 0
 			state, _ = self.env.reset() 
-
+			self.count=0
+			self.count1=0
 			while not done:
 				state = np.reshape(state, [1, self.state_size])
 				action = self.act(state)
@@ -144,7 +154,9 @@ class DQN_Agent():
 			self.epoch_counter += 1
 
 			print('Epoch ' + str(self.epoch_counter) + ' | Avg score per period: ' + str(-avg_score))
-
+			#print(f'count the number of times the epsilon greedy policy is used {self.count}\n')
+			#print(f'count the number of times the model is used {self.count1}\n')
+			#print(self.memory)  #(array([[4, 4]], dtype=int64), 6, -48, array([[6, 2]], dtype=int64), False)
 			if len(self.memory) > self.batch_size:
 				self.replay()
 
