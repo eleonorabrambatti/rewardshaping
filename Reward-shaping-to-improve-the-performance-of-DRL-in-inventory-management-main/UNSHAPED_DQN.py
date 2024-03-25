@@ -78,19 +78,19 @@ class DQN_Agent():
 
 		#experience replay from replay memory
 		minibatch = random.sample(self.memory, self.batch_size)
-		print(f'minibatch {minibatch}\n')
+		#print(f'minibatch {minibatch}\n')
 		current_states = np.array([experience[0] for experience in minibatch])
-		print(f'current_states {current_states}\n')
+		#print(f'current_states {current_states}\n')
 		current_qs_list = np.zeros((self.batch_size, 1, self.env.max_order + 1))
 		for k in range(self.batch_size):
 			current_qs_list[k] = self.model.predict(current_states[k])
-		print(f'current_qs_list {current_qs_list}\n')
+		#print(f'current_qs_list {current_qs_list}\n')
 
 		new_states = np.array([experience[3] for experience in minibatch])
 		future_qs_list = np.zeros((self.batch_size, 1, self.env.max_order + 1))
 		for k in range(self.batch_size):
 			future_qs_list[k] = self.target_model.predict(new_states[k])
-		print(f'future_qs_list {future_qs_list}\n')
+		#print(f'future_qs_list {future_qs_list}\n')
 
 		x = []
 		y = []
@@ -104,7 +104,7 @@ class DQN_Agent():
 				new_q = reward
 
 			current_qs = current_qs_list[i]
-			print(f'current_qs {current_qs}\n')
+			#print(f'current_qs {current_qs}\n')
 			current_qs[0][action] = new_q
 			x.append(current_state[0])
 			y.append(current_qs[0])

@@ -1,9 +1,11 @@
 from ENV_TRAIN import Retail_Environment
 from UNSHAPED_DQN import DQN_Agent
-from SHAPED_B import DQN_Agent
-from SHAPED_BLE import DQN_Agent
+#from SHAPED_B import DQN_Agent
+#from SHAPED_BLE import DQN_Agent
 from pandas import DataFrame
+import pandas as pd
 import os
+import matplotlib.pyplot as plt
 
 x = 0
 
@@ -27,7 +29,8 @@ EPSILON_DECAY = 0.997
 PSI_DECAY = 0.99 # non usato
 EPSILON_MIN = 0.01
 LEARNING_RATE = 0.001
-EPOCHS = 10
+
+EPOCHS = 200
 BATCH_SIZE = 32
 UPDATE = 20
 #################################
@@ -38,35 +41,44 @@ S2 = 0
 #b = 0
 b = 1
 
-env_train = Retail_Environment(LIFETIME, LEADTIME, MEAN_DEMAND, CV, MAX_ORDER, C_ORDER, C_PERISH, C_LOST, C_HOLD, FIFO, LIFO, TRAIN_TIME)
-state_size = len(env_train.state)
-action_size = len(env_train.action_space)
+#env_train = Retail_Environment(LIFETIME, LEADTIME, MEAN_DEMAND, CV, MAX_ORDER, C_ORDER, C_PERISH, C_LOST, C_HOLD, FIFO, LIFO, TRAIN_TIME)
+#state_size = len(env_train.state)
+#action_size = len(env_train.action_space)
 
-rows = 5
 columns = EPOCHS
-scores = [[0 for i in range(columns)] for j in range(rows)]
+rows = 5
+all_scores = {}
 
-for i in range(0,5):
+for lead_time in range(1, 3):  # Iterating through lead times from 1 to 2
+    print(f"Lead Time: {lead_time}")
+    
+    env_train = Retail_Environment(lead_time, LEADTIME, MEAN_DEMAND, CV, MAX_ORDER, C_ORDER, C_PERISH, C_LOST, C_HOLD, FIFO, LIFO, TRAIN_TIME)
+    state_size = len(env_train.state)
+    action_size = len(env_train.action_space)
+    scores = [[0 for _ in range(columns)]]
+    
+    #for i in range(rows):
     print("New agent created...")
+    i=1
+    agent = DQN_Agent(state_size, action_size, GAMMA, EPSILON_DECAY, EPSILON_MIN, LEARNING_RATE, EPOCHS, env_train, BATCH_SIZE, UPDATE, i, x)
+    scores = agent.train()
     
-    #unshaped DQN
-    #agent = DQN_Agent(state_size, action_size, GAMMA, EPSILON_DECAY, EPSILON_MIN, LEARNING_RATE, EPOCHS, env_train, BATCH_SIZE, UPDATE, i, x)
+    #df = pd.DataFrame({'0': scores})
+    all_scores[f'Lead Time {lead_time}'] = pd.DataFrame(scores)  # Converte la lista di liste in un DataFrame
+
+
+# Now you have all scores in the dictionary `all_scores`
+# You can do further processing or save them as needed
+for lead_time, scores_df in all_scores.items():
+    print(f"Lead Time: {lead_time}")
+    print(scores_df)
     
-    #shaped_b
-    #agent = DQN_Agent(state_size, action_size, GAMMA, EPSILON_DECAY, EPSILON_MIN, LEARNING_RATE, EPOCHS, env_train, BATCH_SIZE, UPDATE, i, BASESTOCK, FACTOR, x)
-    
-    #shaped_ble
-    agent = DQN_Agent(state_size, action_size, GAMMA, EPSILON_DECAY, EPSILON_MIN, LEARNING_RATE, EPOCHS, env_train, BATCH_SIZE, UPDATE, i, S1, S2, b, FACTOR, x)
-    
-    scores[i] = agent.train()
-#df = DataFrame({'0': scores[0], '1': scores[1], '2': scores[2], '3': scores[3], '4': scores[4], '5': scores[5], '6': scores[6], '7': scores[7], '8': scores[8], '9': scores[9], '10': scores[10], '11': scores[11], '12': scores[12], '13': scores[13], '14': scores[14], '15': scores[15], '16': scores[16], '17': scores[17], '18': scores[18], '19': scores[19], '20': scores[20], '21': scores[21], '22': scores[22], '23': scores[23], '24': scores[24], '25': scores[25], '26': scores[26], '27': scores[27], '28': scores[28], '29': scores[29], '30': scores[30], '31': scores[31], '32': scores[32], '33': scores[33], '34': scores[34], '35': scores[35], '36': scores[36], '37': scores[37], '38': scores[38], '39': scores[39], '40': scores[40], '41': scores[41], '42': scores[42], '43': scores[43], '44': scores[44], '45': scores[45], '46': scores[46], '47': scores[47], '48': scores[48], '49': scores[49]})
-#df = DataFrame({'0': scores[0], '1': scores[1], '2': scores[2], '3': scores[3], '4': scores[4], '5': scores[5], '6': scores[6], '7': scores[7], '8': scores[8], '9': scores[9]})
-df = DataFrame({'0': scores[0], '1': scores[1], '2': scores[2], '3': scores[3], '4': scores[4]})
-
-#path = r'..\\rewardshaping\\test_dqn'
-
-#df.to_excel(str(path) + '\\EVAL' + str(x) + '\\overview.xlsx', index=False)
-
-print(df)
-
-
+    # Creazione del grafico
+    plt.figure(figsize=(10, 5))
+    plt.plot(scores_df.index, scores_df[0], label=f'Lead Time {lead_time}')  # Plotting scores
+    plt.title(f'Scores per Lead Time {lead_time}')
+    plt.xlabel('Epochs')
+    plt.ylabel('Scores')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
