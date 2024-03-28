@@ -510,8 +510,8 @@ def get_base_config(sequence_idx: int) -> dict:
         raise ValueError(
             f"Sequence index {sequence_idx} not found. Valid indices are {BASE_DEMAND.keys()}"
         )
- 
-    with open("config.json", "r") as f:
+    
+    with open(r'C:\Users\mprivitera\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\supply_chain_env\config.json', "r") as f:
         config_dict = json.load(f)
  
     config_dict["demand_fn"] = "uniform"

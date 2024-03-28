@@ -1,7 +1,7 @@
 from random import random
  
-from schemas import StockSchema
-from sized_fifo import SizedFIFO
+from  supply_chain_env.schemas import StockSchema
+from  supply_chain_env.sized_fifo import SizedFIFO
  
  
 class Stock:

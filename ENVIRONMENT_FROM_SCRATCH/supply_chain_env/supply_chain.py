@@ -3,10 +3,10 @@ import numpy as np
 import gymnasium
 from gymnasium.spaces import Box
  
-from schemas import SupplyChainSchema
-from sized_fifo import SizedFIFO
-from stock import Stock
-from time_series import get_time_series
+from supply_chain_env.schemas import SupplyChainSchema
+from supply_chain_env.sized_fifo import SizedFIFO
+from supply_chain_env.stock import Stock
+from supply_chain_env.time_series import get_time_series
  
  
 class SupplyChainEnvironment(gymnasium.Env):
@@ -22,9 +22,9 @@ class SupplyChainEnvironment(gymnasium.Env):
  
     def __init__(self, config: str):
         if isinstance(config, str):
-            config = SupplyChainSchema.parse_file(config)
+            config = SupplyChainSchema.parse_file(config) 
         elif isinstance(config, dict):
-            config = SupplyChainSchema(**config)
+            config = SupplyChainSchema(**config) # Nel caso specifico di SupplyChainSchema(**config), **config viene utilizzato per estrarre gli elementi dal dizionario config e passarli come argomenti di parole chiave alla classe SupplyChainSchema. Ciò significa che ogni chiave nel dizionario config diventa un nome di argomento e il valore corrispondente diventa il valore di quell'argomento. 
         self._stock = None
         self._demand = None
         self._demand_history = None
@@ -35,6 +35,18 @@ class SupplyChainEnvironment(gymnasium.Env):
         self._action_history = None
         self._supply_chain_schema = config
         self.time = 0
+        ################################################################################################################################################
+        self._product_types_num=None
+        self._central_warehouses_num=None
+        self._local_warehouses_num=None
+        self._horizon=None
+        self._lead_times_len=None
+        self._d_max= None #maximum demand value
+        self._d_var= None
+        self._sale_prices=None
+        self.excess_demand=None
+        self._demand_history_len=None
+        ################################################################################################################################################
         self.reset()
  
     def __repr__(self) -> str:
@@ -48,6 +60,7 @@ class SupplyChainEnvironment(gymnasium.Env):
         )
  
     def __str__(self) -> str:
+        print('sono qui ora')
         return self.__repr__()
  
     @property
@@ -101,7 +114,8 @@ class SupplyChainEnvironment(gymnasium.Env):
         return self._observation_space
  
     def get_config(self) -> dict:
-        return self._supply_chain_schema.dict()
+        return self._supply_chain_schema.dict() # va a prendere    max_time: int = Field(ge=0) len_demand_history: int = Field(ge=0) len_forecast_history: int = Field(ge=0) stock_schema: StockSchema
+           #  self._supply_chain_schema = config
  
     @staticmethod
     def _get_price(price_dict: dict[int, float], num_orders: int) -> float:
@@ -111,6 +125,7 @@ class SupplyChainEnvironment(gymnasium.Env):
             if num_orders >= key:
                 return price_dict[key]
         raise ValueError("Price dict is empty.")
+
  
     def reset(self, seed=None, options=None):
         initial_stock = self._supply_chain_schema.initial_stock
