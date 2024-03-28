@@ -133,7 +133,7 @@ class DQN_Agent():
 	def train(self):
 
 		scores = []
-
+	
 		for e in range(self.epochs):
 			
 			done = False
@@ -141,6 +141,7 @@ class DQN_Agent():
 			state, _ = self.env.reset() 
 			self.count=0
 			self.count1=0
+
 			while not done:
 				state = np.reshape(state, [1, self.state_size])
 				action = self.act(state)

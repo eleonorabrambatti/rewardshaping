@@ -13,9 +13,9 @@ class Retail_Environment (object):
 		self.coef_of_var = coef_of_var
 		self.max_order = max_order
 		self.cost_order = cost_order
-		self.cost_outdate = cost_outdate
-		self.cost_lost = cost_lost
-		self.cost_holding = cost_holding
+		self.cost_outdate = cost_outdate # costo di quello che devo buttare perche' deperito
+		self.cost_lost = cost_lost # costo della domanda insoddisfatta
+		self.cost_holding = cost_holding # costo di quello che mi resta ma che non devo buttare
 		self.FIFO = FIFO
 		self.LIFO = LIFO
 		self.time = time
@@ -78,7 +78,7 @@ class Retail_Environment (object):
 		outdate_cost = calc_state[-1] * self.cost_outdate
 		lost_sales_cost = demand * self.cost_lost
 		holding_cost = 0
-		for i in range(self.leadtime + 1, self.leadtime + self.lifetime):
+		for i in range(self.leadtime, self.leadtime + self.lifetime):
 			holding_cost += next_state[i] * self.cost_holding
 
 		self.reward = -order_cost - outdate_cost - lost_sales_cost - holding_cost

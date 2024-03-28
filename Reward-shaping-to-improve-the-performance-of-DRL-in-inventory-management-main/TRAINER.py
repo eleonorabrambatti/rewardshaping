@@ -2,6 +2,7 @@ from ENV_TRAIN import Retail_Environment
 from UNSHAPED_DQN import DQN_Agent
 #from SHAPED_B import DQN_Agent
 #from SHAPED_BLE import DQN_Agent
+from BASESTOCK_POLICY import DQN_Agent
 from pandas import DataFrame
 import pandas as pd
 import os
@@ -12,17 +13,17 @@ x = 0
 #################################
 MEAN_DEMAND = 4
 CV = 0.5
-LIFETIME = 2
-LEADTIME = 1
-C_LOST = 5
-C_HOLD = 1
-C_PERISH = 7
-C_ORDER = 3
-FIFO = False	
-LIFO = True
+LIFETIME = 3
+LEADTIME = 2
+C_LOST = 20
+C_HOLD = 0.5
+C_PERISH = 2
+C_ORDER = 0
+FIFO = True	
+LIFO = False
 #################################
-MAX_ORDER = 10
-TRAIN_TIME = 1000
+MAX_ORDER = 50
+TRAIN_TIME = 30
 #################################
 GAMMA = 0.99
 EPSILON_DECAY = 0.997
@@ -30,7 +31,7 @@ PSI_DECAY = 0.99 # non usato
 EPSILON_MIN = 0.01
 LEARNING_RATE = 0.001
 
-EPOCHS = 200
+EPOCHS = 40
 BATCH_SIZE = 32
 UPDATE = 20
 #################################
@@ -49,10 +50,9 @@ columns = EPOCHS
 rows = 5
 all_scores = {}
 
-for lead_time in range(1, 3):  # Iterating through lead times from 1 to 2
-    print(f"Lead Time: {lead_time}")
+for lead_time in range(2, 3):  # Iterating through lead times from 1 to 2
     
-    env_train = Retail_Environment(lead_time, LEADTIME, MEAN_DEMAND, CV, MAX_ORDER, C_ORDER, C_PERISH, C_LOST, C_HOLD, FIFO, LIFO, TRAIN_TIME)
+    env_train = Retail_Environment(LIFETIME, lead_time, MEAN_DEMAND, CV, MAX_ORDER, C_ORDER, C_PERISH, C_LOST, C_HOLD, FIFO, LIFO, TRAIN_TIME)
     state_size = len(env_train.state)
     action_size = len(env_train.action_space)
     scores = [[0 for _ in range(columns)]]
@@ -64,7 +64,7 @@ for lead_time in range(1, 3):  # Iterating through lead times from 1 to 2
     scores = agent.train()
     
     #df = pd.DataFrame({'0': scores})
-    all_scores[f'Lead Time {lead_time}'] = pd.DataFrame(scores)  # Converte la lista di liste in un DataFrame
+    all_scores[f'{lead_time}'] = pd.DataFrame(scores)  # Converte la lista di liste in un DataFrame
 
 
 # Now you have all scores in the dictionary `all_scores`

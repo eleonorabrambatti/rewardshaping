@@ -143,7 +143,7 @@ class DQN_Agent():
 
 				in_inv = 0
 				for i in range(self.env.leadtime + self.env.lifetime - 1):
-					in_inv += state[0][i] # sommo sui prodotti degli ultimi due giorni che sono entrambi il mio inventario(ho piu' unita' dello stesso prodotto)
+					in_inv += state[0][i] # sommo sui prodotti degli ultimi due giorni che sono entrambi il mio inventario (ho piu' unita' dello stesso prodotto)
 				bsp_order = max(0, self.base_stock - in_inv) #l 'azioe che voglio e' quella per ripristinare lo stock in base stock fissato quindi devo agire ordinando la differenza
 				cur_val = -self.factor * abs(bsp_order - action)
 				F = cur_val - ((1/self.gamma)*prev_val)
