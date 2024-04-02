@@ -22,7 +22,7 @@ class ItemSchema(SupplyChainBaseSchema):
     penalty_cost: float = Field(ge=0.0)
     expiration_cost: float = Field(ge=0.0)
  
- 
+
 class StockSchema(SupplyChainBaseSchema):
     """Schema for the stocks involved in the supply chain."""
  

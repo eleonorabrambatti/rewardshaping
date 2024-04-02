@@ -1,6 +1,6 @@
 from supply_chain_env.base_demand import get_base_config
 from supply_chain_env.supply_chain import SupplyChainEnvironment
- 
+
  
 def main():
     env = SupplyChainEnvironment(config=get_base_config(1))

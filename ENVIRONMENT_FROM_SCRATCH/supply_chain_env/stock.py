@@ -90,7 +90,7 @@ class Stock:
         expired = self.available.insert(arrived)
         excess = 0
         available_items = sum(self.available)
-        if available_items > self.stock_schema.capacity:
+        if available_items > self.stock_schema.capacity: # se e ' di piu' di quelo che puo' mantenere il magazzino
             excess = available_items - self.stock_schema.capacity
-            self.retrieve(excess)
+            self.retrieve(excess) # viene restituita la quantita' totale degli articoli prelevati dallinventario
         return expired, excess
