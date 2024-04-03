@@ -48,7 +48,7 @@
       0,
       0
     ],
-    "len_demand_history": 0,
+    "len_demand_history": 2,
     "len_forecast_history": 12,
     "max_orders": 6,
     "max_time": 239,

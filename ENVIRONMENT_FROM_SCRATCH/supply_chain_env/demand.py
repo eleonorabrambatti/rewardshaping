@@ -1,5 +1,12 @@
 import json
- 
+import numpy as np
+from random import seed as random_seed, random
+
+# Imposta il seed per NumPy
+np.random.seed(42)
+
+# Imposta il seed per il generatore di numeri casuali standard di Python
+random_seed(42)
 BASE_DEMAND = {
     1: 20,
     2: [
@@ -505,7 +512,7 @@ BASE_DEMAND = {
 }
  
  
-def get_base_config(sequence_idx: int) -> dict:
+def get_base_config(sequence_idx: int, mode: str) -> dict:
     if sequence_idx not in BASE_DEMAND:
         raise ValueError(
             f"Sequence index {sequence_idx} not found. Valid indices are {BASE_DEMAND.keys()}"
@@ -514,14 +521,14 @@ def get_base_config(sequence_idx: int) -> dict:
     with open(r'C:\Users\mprivitera\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\supply_chain_env\config.json', "r") as f:
         config_dict = json.load(f)
  
-    config_dict["demand_fn"] = "uniform"
+    config_dict["demand_fn"] = mode
     config_dict["demand_fn_args"] = {
         "base": BASE_DEMAND[sequence_idx],
         "low": 0.85,
         "high": 1.15,
     }
  
-    config_dict["forecast_fn"] = "uniform"
+    config_dict["forecast_fn"] = mode
     config_dict["forecast_fn_args"] = {
         "base": BASE_DEMAND[sequence_idx]
         if type(BASE_DEMAND[sequence_idx]) == list
@@ -531,4 +538,94 @@ def get_base_config(sequence_idx: int) -> dict:
     }
  
     return config_dict
+
+
+def get_constant_ts(args: dict, length: int) -> np.array:
+    if "value" not in args:
+        raise ValueError(f"Missing value in {args}")
+    return np.array([args["value"]] * length)
+ 
+ 
+def get_uniform_ts(args: dict, length: int) -> np.array:
+    if "base" not in args:
+        raise ValueError(f"Missing base in {args}")
+    if "low" not in args:
+        raise ValueError(f"Missing low in {args}")
+    if "high" not in args:
+        raise ValueError(f"Missing high in {args}")
+    if args["low"] > args["high"]:
+        raise ValueError(f"Low {args['low']} is greater than high {args['high']}")
+ 
+    if isinstance(args["base"], list):
+        return np.array(
+            [
+                round(
+                    _randomize(
+                        x=args["base"][min(i, len(args["base"]) - 1)],
+                        low=args["low"],
+                        high=args["high"],
+                    )
+                )
+                for i in range(length)
+            ]
+        )
+    else:
+        return np.array(
+            [
+                round(_randomize(x=args["base"], low=args["low"], high=args["high"]))
+                for _ in range(length)
+            ]
+        )
+ 
+ 
+def get_gaussian_ts(args: dict, length: int) -> np.array:
+    if "base" not in args:
+        raise ValueError(f"Missing base in {args}")
+    if "mean" not in args:
+        raise ValueError(f"Missing mean in {args}")
+    if "std" not in args:
+        raise ValueError(f"Missing std in {args}")
+    return np.array(
+        [
+            args["base"] + np.random.normal(args["mean"], args["std"])
+            for _ in range(length)
+        ]
+    )
+ 
+ 
+def get_sinusoidal_ts(args: dict, length: int) -> np.array:
+    if "base" not in args:
+        raise ValueError(f"Missing base in {args}")
+    if "amplitude" not in args:
+        raise ValueError(f"Missing amplitude in {args}")
+    if "period" not in args:
+        raise ValueError(f"Missing period in {args}")
+    if "std" not in args:
+        raise ValueError(f"Missing std in {args}")
+    return np.array(
+        [
+            args["base"]
+            + args["amplitude"] * np.sin(2 * np.pi * t / args["period"])
+            + np.random.normal(0, args["std"])
+            for t in range(length)
+        ]
+    )
+ 
+ 
+def _randomize(x, low, high):
+    return x * (random() * (high - low) + low)
+ 
+ 
+TIME_SERIES = {
+    "constant": get_constant_ts,
+    "uniform": get_uniform_ts,
+    "gaussian": get_gaussian_ts,
+    "sinusoidal": get_sinusoidal_ts,
+}
+ 
+ 
+def get_time_series(mode: str, args: dict, length: int) -> np.ndarray:
+    if mode not in TIME_SERIES:
+        raise ValueError(f"Time series {mode} not in {TIME_SERIES.keys()}")
+    return TIME_SERIES[mode](args, length)
 

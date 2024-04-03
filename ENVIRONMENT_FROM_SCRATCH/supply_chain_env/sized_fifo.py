@@ -64,3 +64,5 @@ copy(self): Restituisce una copia della coda FIFO.
 queue(self) -> np.array: Proprietà che restituisce una copia dell'array interno che rappresenta la coda FIFO.
 insert(self, value: int or float) -> int or float: Inserisce un valore all'inizio della coda FIFO e rimuove il valore alla fine della coda FIFO se la coda è piena. per;' restituisce il valore tolto cioe' quello che e' scaduto e che si e' tolto.
 In sintesi, questa classe fornisce una struttura dati FIFO di dimensione fissa con funzionalità per inserire, accedere, modificare e ottenere informazioni sulla coda. """
+
+
