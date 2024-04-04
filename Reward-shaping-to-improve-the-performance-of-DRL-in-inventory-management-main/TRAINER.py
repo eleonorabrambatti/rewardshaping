@@ -1,8 +1,8 @@
 from ENV_TRAIN import Retail_Environment
-from UNSHAPED_DQN import DQN_Agent
+from DQN_cleanrl import DQN_Agent
 #from SHAPED_B import DQN_Agent
 #from SHAPED_BLE import DQN_Agent
-from BASESTOCK_POLICY import DQN_Agent
+#from BASESTOCK_POLICY import DQN_Agent
 from pandas import DataFrame
 import pandas as pd
 import os

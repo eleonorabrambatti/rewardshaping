@@ -1,6 +1,6 @@
 from ENV_TEST import Retail_Environment
 from keras.models import load_model, Sequential
-from UNSHAPED_DQN import DQN_Agent
+from DQN_cleanrl import DQN_Agent
 import h5py
 import numpy as np
 from statistics import mean, stdev
