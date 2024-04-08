@@ -51,6 +51,6 @@
     "len_demand_history": 2,
     "len_forecast_history": 12,
     "max_orders": 6,
-    "max_time": 239,
+    "max_time": 1000,
     "items_per_order": 20
   }

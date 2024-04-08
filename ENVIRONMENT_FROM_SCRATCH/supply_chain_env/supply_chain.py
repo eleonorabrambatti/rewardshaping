@@ -43,7 +43,7 @@ class SupplyChainEnvironment(gymnasium.Env):
         self._observation_space = None
         self._action_history = None
         self._supply_chain_schema = config
-        self._time = 0
+        
         ################################################################################################################################################
         self._product_types_num=2
         self._central_warehouses_num=2
@@ -68,10 +68,10 @@ class SupplyChainEnvironment(gymnasium.Env):
         """ il tipo di dato restituito da una funzione o un metodo """
         return (
             f"SupplyChain(t={self.time}, "
-            f"d={self.demand[self.time]}, "
-            f"f_t={self.forecast[self.time]}, "
-            f"f_l={self.forecast[self.time + self._supply_chain_schema.stock_schema.item_schema.lead_time]}) "
-            f"Stock = available: {self._available}, in transit: {self._in_transit})"
+            #f"d={self.demand[self.time]}, "
+            #f"f_t={self.forecast[self.time]}, "
+            #f"f_l={self.forecast[self.time + self._supply_chain_schema.stock_schema.item_schema.lead_time]}) "
+            f"State = available: {self._available}, in transit: {self._in_transit})"
         )
  
     def __str__(self) -> str:
@@ -173,11 +173,11 @@ class SupplyChainEnvironment(gymnasium.Env):
             if random() < self.stock_schema.lost_items_probability:
                 arrived -= 1
         """
-        arrived = round(
+        new_arrived = round(
             arrived * (1 - random() * self._supply_chain_schema.stock_schema.lost_items_probability)
         )
- 
-        expired = self._available.insert(arrived)
+        print(f'number of lost items: {arrived-new_arrived}')
+        expired = self._available.insert(new_arrived)
         excess = 0
         available_items = sum(self._available)
         if available_items > self._supply_chain_schema.stock_schema.capacity: # se e ' di piu' di quelo che puo' mantenere il magazzino
@@ -222,7 +222,8 @@ class SupplyChainEnvironment(gymnasium.Env):
             self._supply_chain_schema.max_orders,
             shape=(1,),
             dtype=np.int64,
-        ) # si tratta di un solo elemento che contiene un valore possibile tra i 12 cioe' un solo valore tra 0 e 12
+        )
+        # si tratta di un solo elemento che contiene un valore possibile tra i 12 cioe' un solo valore tra 0 e 12
        
         state_len = (
                 1
@@ -252,22 +253,22 @@ class SupplyChainEnvironment(gymnasium.Env):
             [0] * self._supply_chain_schema.stock_schema.item_schema.lead_time # action history ha la lunghezza di lead time e la inizializza a zero
         )
 
-        print('qui stampo il reset dello stato')
-        print(np.array(
+        
+        """ print(np.array(
                 [
                     self.time,
                     *self._available.queue,
                     *self._in_transit.queue,
                     *self.demand_history.queue,
                     *self.forecast_history.queue,
-                ]))
+                ])) """
         return np.array( #questo return mi serve solo per stampare lo stato finale dopo che ha agito lo step 
                 [
                     self.time,
                     *self._available.queue, # chiama la funzione queue che fa una copia  di _queue cioe' dell'oggetto della classe SizedFifo con tutte le caratteristiche annesse,available quindi viene gestito secondo le specifiche della classe
                     *self._in_transit.queue, # chiama la funzione queue che fa una copia  di _queue cioe' dell'oggetto della classe SizedFifo con tutte le caratteristiche annesse, in transit quindi viene gestito secondo le specifiche della classe
-                    *self.demand_history.queue,
-                    *self.forecast_history.queue,
+                    #*self.demand_history.queue,
+                    #*self.forecast_history.queue,
                 ]
             )
         #return self.get_state(), {}
@@ -275,7 +276,7 @@ class SupplyChainEnvironment(gymnasium.Env):
     
     def step(self, action: np.array) -> tuple[np.array, float, bool, bool, dict]:
         action = np.around(action) # arrotonda l'azione all'intero piu' vicino
-        print(f'action:{action}')
+        #print(f'action:{action}')
         if action < 0 or action > self._supply_chain_schema.max_orders: # azione problematica controllata
             raise ValueError(
                 "action must be greater than zero and less than or equal to max_orders"
@@ -322,7 +323,7 @@ class SupplyChainEnvironment(gymnasium.Env):
  
         # advance time
         self.time += 1
-
+        
         state = np.array( #questo return mi serve solo per stampare lo stato finale dopo che ha agito lo step 
                 [
                     self.time,
@@ -332,7 +333,7 @@ class SupplyChainEnvironment(gymnasium.Env):
                     *self.forecast_history.queue,
                 ]
             )
-        print(state)
+        #print(state)
         return (
             state,
             reward,

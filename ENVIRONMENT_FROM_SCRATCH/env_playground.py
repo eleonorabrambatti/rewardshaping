@@ -29,7 +29,7 @@ PSI_DECAY = 0.99 # non usato
 EPSILON_MIN = 0.01
 LEARNING_RATE = 0.001
 
-EPOCHS = 20
+EPOCHS = 50
 BATCH_SIZE = 32
 UPDATE = 20
 #################################
@@ -46,8 +46,8 @@ rows = 5
 def main():
     
     env = SupplyChainEnvironment(config=get_base_config(1,"uniform"))
-    env.reset()
- 
+    #env.reset()
+    #print(env)
     """ human_actions = [0] * env.get_config().get("max_time")
     for i in range(len(human_actions)):
         if i % 3 == 0:
@@ -60,7 +60,7 @@ def main():
     #state_size = len(env.observation_space.n
 
     #if isinstance(env.action_space, gym.spaces.Box):
-    action_size = 1
+    action_size =  env._supply_chain_schema.max_orders
     #elif isinstance(env.action_space, gym.spaces.Discrete):
         #action_size = env.action_space.n
 
@@ -74,26 +74,26 @@ def main():
     
     #df = pd.DataFrame({'0': scores})
     all_scores[f'{LEADTIME}'] = pd.DataFrame(scores)  # Converte la lista di liste in un DataFrame
-    print(all_scores)
+    #print(all_scores)
     #print(env) # SupplyChain inizializzato
     #for a in human_actions:
     #    state, reward, done, _, _ = env.step(a)
     #    print(env, reward)
     #    print("action is " + str(a))
     #    print("state is " + str(state))
-for lead_time, scores_df in all_scores.items():
-    print(f"Lead Time: {lead_time}")
-    print(scores_df)
-    
-    # Creazione del grafico
-    plt.figure(figsize=(10, 5))
-    plt.plot(scores_df.index, scores_df[0], label=f'Lead Time {lead_time}')  # Plotting scores
-    plt.title(f'Scores per Lead Time {lead_time}')
-    plt.xlabel('Epochs')
-    plt.ylabel('Scores')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    for lead_time, scores_df in all_scores.items():
+        print(f"Average reward per epoch")
+        print(scores_df)
+        
+        # Creazione del grafico
+        plt.figure(figsize=(10, 5))
+        plt.plot(scores_df.index, scores_df[0], label=f'Average reward')  # Plotting scores
+        plt.title(f'Average reward per epoch')
+        plt.xlabel('Epochs')
+        plt.ylabel('Reward')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
 
  
  

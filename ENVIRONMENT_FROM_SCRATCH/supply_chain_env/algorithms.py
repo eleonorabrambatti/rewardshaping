@@ -59,14 +59,18 @@ class DQN_Agent(SupplyChainEnvironment):
 
 
 	def act(self, state):
-		print(f'state: {state}')
+		
+		#print(f'state: {state}')
+		#if self.env.time == 0:
+		#	self._action = self.env._supply_chain_schema.max_orders
+		#	return self._action
 		if np.random.rand() <= self.epsilon:
 			self.count+=1
 			return random.randrange(self.action_size)
-		#print(state)
+		  
 		act_values = self.model.predict(state)
 		self.count1+=1
-
+		
 		return np.argmax(act_values[0])
 
 
@@ -82,13 +86,13 @@ class DQN_Agent(SupplyChainEnvironment):
 		#print(f'minibatch {minibatch}\n')
 		current_states = np.array([experience[0] for experience in minibatch])
 		#print(f'current_states {current_states}\n')
-		current_qs_list = np.zeros((self.batch_size, 1, self.env._supply_chain_schema.max_orders + 1))
+		current_qs_list = np.zeros((self.batch_size, 1, self.env._supply_chain_schema.max_orders))
 		for k in range(self.batch_size):
 			current_qs_list[k] = self.model.predict(current_states[k])
 		#print(f'current_qs_list {current_qs_list}\n')
 
 		new_states = np.array([experience[3] for experience in minibatch])
-		future_qs_list = np.zeros((self.batch_size, 1, self.env._supply_chain_schema.max_orders + 1))
+		future_qs_list = np.zeros((self.batch_size, 1, self.env._supply_chain_schema.max_orders))
 		for k in range(self.batch_size):
 			future_qs_list[k] = self.target_model.predict(new_states[k])
 		#print(f'future_qs_list {future_qs_list}\n')
@@ -136,7 +140,7 @@ class DQN_Agent(SupplyChainEnvironment):
 		scores = []
 	
 		for e in range(self.epochs):
-			
+			print(f'\nInizio epoca {e}\n')
 			done = False
 			score = 0
 			state = self.env.reset() 
@@ -144,15 +148,21 @@ class DQN_Agent(SupplyChainEnvironment):
 			self.count1=0
 
 			while not done:
+				#print(f'state prima: {state}')
 				state = np.reshape(state, [1, self.state_size])
+				#print(f'state dopo: {state}')
+				print(f'time step: {self.env.time+1}, epoch: {e+1}')
+				print(f'demand at time step {self.env.time}: {self.env._demand[self.env.time]}')
 				action = self.act(state)
+				print(f'action: {action}')
 				next_state, reward, done, _ = self.env.step(action)
-				print(f'next_state: {next_state}')
 				print(f'reward: {reward}')
+				print(f'{self.env}\n')
+				#print(f'reward: {reward}')
 				score += reward
 				next_state = np.reshape(next_state, [1, self.state_size])
 				self.remember(state, action, reward, next_state, done)
-				print(f'remember: {self.remember(state, action, reward, next_state, done)}')
+				#print(f'remember: {self.remember(state, action, reward, next_state, done)}')
 				state = next_state
 
 			avg_score = score / self.env.time 
@@ -165,12 +175,12 @@ class DQN_Agent(SupplyChainEnvironment):
 			if len(self.memory) > self.batch_size:
 				self.replay()
 
-			scores.append(-avg_score)
+			scores.append(avg_score)
 
 		df = DataFrame({'Reward': scores})
-		path = r'..\\rewardshaping\\test_dqn'
+		#path = r'..\\rewardshaping\\test_dqn'
 		#df.to_excel(str(path) + str(self.x) + '\\Lifetime ' + str(self.env.lifetime) + ' - iteration ' + str(self.iteration) + '.xlsx')
-		self.model.save(str(path) + str(self.x) + '\\Lifetime ' + str(self.env._available) + ' - iteration ' + str(self.iteration) + '.h5')
+		#self.model.save(str(path) + str(self.x) + '\\Lifetime ' + str(self.env._available) + ' - iteration ' + str(self.iteration) + '.h5')
 		
 		return scores
 
