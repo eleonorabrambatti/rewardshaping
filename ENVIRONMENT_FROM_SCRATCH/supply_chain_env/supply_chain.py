@@ -62,7 +62,8 @@ class SupplyChainEnvironment(gymnasium.Env):
         self._available = None
         self._in_transit = None
         ################################################################################################################################################
- 
+        #self.reset()
+
     def __repr__(self) -> str:
         """ il tipo di dato restituito da una funzione o un metodo """
         return (
@@ -274,6 +275,7 @@ class SupplyChainEnvironment(gymnasium.Env):
     
     def step(self, action: np.array) -> tuple[np.array, float, bool, bool, dict]:
         action = np.around(action) # arrotonda l'azione all'intero piu' vicino
+        print(f'action:{action}')
         if action < 0 or action > self._supply_chain_schema.max_orders: # azione problematica controllata
             raise ValueError(
                 "action must be greater than zero and less than or equal to max_orders"
@@ -330,12 +332,11 @@ class SupplyChainEnvironment(gymnasium.Env):
                     *self.forecast_history.queue,
                 ]
             )
- 
+        print(state)
         return (
             state,
             reward,
             self.time >= self._supply_chain_schema.max_time,
-            False,
             {
                 "logs": [
                     sum(self._available),
