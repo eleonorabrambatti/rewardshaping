@@ -9,7 +9,7 @@ import gymnasium as gym
 x = 0
 
 #################################
-MEAN_DEMAND = 4
+""" MEAN_DEMAND = 4
 CV = 0.5
 LIFETIME = 12
 LEADTIME = 12
@@ -21,7 +21,7 @@ FIFO = True
 LIFO = False
 #################################
 MAX_ORDER = 50
-TRAIN_TIME = 30
+TRAIN_TIME = 30 """
 #################################
 GAMMA = 0.99
 EPSILON_DECAY = 0.997
@@ -29,16 +29,16 @@ PSI_DECAY = 0.99 # non usato
 EPSILON_MIN = 0.01
 LEARNING_RATE = 0.001
 
-EPOCHS = 50
+EPOCHS = 2000
 BATCH_SIZE = 32
 UPDATE = 20
 #################################
-FACTOR = 50
+""" FACTOR = 50
 BASESTOCK = 0
 S1 = 0
 S2 = 0
 #b = 0
-b = 1
+b = 1 """
 
 all_scores = {}
 columns = EPOCHS
@@ -55,7 +55,7 @@ def main():
     
     #env_train = Retail_Environment(LIFETIME, lead_time, MEAN_DEMAND, CV, MAX_ORDER, C_ORDER, C_PERISH, C_LOST, C_HOLD, FIFO, LIFO, TRAIN_TIME)
     #if isinstance(env.observation_space, gym.spaces.Box):
-    state_size = 25
+    state_size = 6
     #elif isinstance(env.observation_space, gym.spaces.Discrete):
     #state_size = len(env.observation_space.n
 
@@ -68,12 +68,12 @@ def main():
     
     #for i in range(rows):
     print("New agent created...")
-    i=1
-    agent = DQN_Agent(state_size, action_size, GAMMA, EPSILON_DECAY, EPSILON_MIN, LEARNING_RATE, EPOCHS, env, BATCH_SIZE, UPDATE, i, x)
+    
+    agent = DQN_Agent(state_size, action_size, GAMMA, EPSILON_DECAY, EPSILON_MIN, LEARNING_RATE, EPOCHS, env, BATCH_SIZE, UPDATE)
     scores = agent.train()
     
     #df = pd.DataFrame({'0': scores})
-    all_scores[f'{LEADTIME}'] = pd.DataFrame(scores)  # Converte la lista di liste in un DataFrame
+    all_scores[f'{env._supply_chain_schema.stock_schema.item_schema.lead_time}'] = pd.DataFrame(scores)  # Converte la lista di liste in un DataFrame
     #print(all_scores)
     #print(env) # SupplyChain inizializzato
     #for a in human_actions:

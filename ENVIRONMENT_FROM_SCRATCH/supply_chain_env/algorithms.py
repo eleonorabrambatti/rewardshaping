@@ -19,7 +19,7 @@ from supply_chain_env.schemas import SupplyChainSchema
 
 class DQN_Agent(SupplyChainEnvironment):
 
-	def __init__(self, state_size, action_size, gamma, epsilon_decay, epsilon_min, learning_rate, epochs, env, batch_size, update, iteration, x):
+	def __init__(self, state_size, action_size, epsilon_decay, gamma, epsilon_min, learning_rate, epochs, env, batch_size, update):
 
 		self.state_size = state_size
 		self.action_size = action_size
@@ -38,8 +38,6 @@ class DQN_Agent(SupplyChainEnvironment):
 		self.count=0
 		self.count1=0
 		self.epsilon = 1.0
-		self.iteration = iteration
-		self.x = x
 		self.model = self.build_model()
 		self.target_model = self.build_model()
 		#self.trained_model = self.train()
@@ -158,7 +156,6 @@ class DQN_Agent(SupplyChainEnvironment):
 				next_state, reward, done, _ = self.env.step(action)
 				print(f'reward: {reward}')
 				print(f'{self.env}\n')
-				#print(f'reward: {reward}')
 				score += reward
 				next_state = np.reshape(next_state, [1, self.state_size])
 				self.remember(state, action, reward, next_state, done)
@@ -174,7 +171,7 @@ class DQN_Agent(SupplyChainEnvironment):
 			#print(self.memory)  #(array([[4, 4]], dtype=int64), 6, -48, array([[6, 2]], dtype=int64), False)
 			if len(self.memory) > self.batch_size:
 				self.replay()
-
+			print(f'vettore domanda: {self.env._demand}')
 			scores.append(avg_score)
 
 		df = DataFrame({'Reward': scores})

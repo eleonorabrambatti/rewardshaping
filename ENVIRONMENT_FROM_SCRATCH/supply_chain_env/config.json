@@ -1,8 +1,8 @@
 {
     "stock_schema": {
       "item_schema": {
-        "lead_time": 12,
-        "expiration_time": 12,
+        "lead_time": 2,
+        "expiration_time": 3,
         "selling_price": 0.0,
         "order_cost": {
           "1": 5.0,
@@ -23,34 +23,15 @@
     "initial_stock": [
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
       0
     ],
     "initial_in_transit": [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
       0,
       0
     ],
     "len_demand_history": 2,
     "len_forecast_history": 12,
-    "max_orders": 6,
-    "max_time": 1000,
+    "max_orders": 3,
+    "max_time": 239,
     "items_per_order": 20
   }
