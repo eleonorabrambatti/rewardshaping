@@ -123,7 +123,7 @@ if total_configs > 2:
 
 # Adjust policy_kwargs and learning rate if needed
 policy_kwargs = dict(net_arch=[dict(pi=[32, 32], vf=[32, 32])])
-learning_rate = 1e-5
+learning_rate = 1e-4
 
 # Loop through each configuration
 for config_index, config in enumerate(configurations):
@@ -144,12 +144,12 @@ for config_index, config in enumerate(configurations):
     callback = CallbackList([eval_callback, checkpoint_callback])
 
     # Train the model
-    total_timesteps = 300000
+    total_timesteps =200000
     model.learn(total_timesteps=total_timesteps, callback=callback)
 
     # Evaluate the trained model
     mean_reward, std_reward, detailed_metrics =evaluate_policy_and_log_detailed_metrics(model,
-                                    env,n_eval_episodes=2000)
+                                    env,n_eval_episodes=100)
 
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])

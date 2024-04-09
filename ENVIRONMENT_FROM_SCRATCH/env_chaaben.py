@@ -53,7 +53,7 @@ class InventoryEnvGYConfig(gym.Env):
 
 
     def seed(self, seed=None):
-        np.random.seed(seed)
+        np.random.seed(1000)
         
     
     def step(self, action):
