@@ -4,11 +4,13 @@ from gym import spaces
 
 class InventoryEnvGYConfig(gym.Env):
     def __init__(self, config):
-        super(InventoryEnvGYConfig, self).__init__()
+        #super(InventoryEnvGYConfig, self).__init__()
         # Action and observation spaces
-        self.action_space = spaces.Discrete(30)
+        self.action_space = spaces.Discrete(30) # ho 30 possibili azioni tra cui scegliere (da 0 a 29)
         observation_length = (config['m'] + config['L'] - 1) + config['m'] + 3
         self.observation_space = spaces.Box(low=0, high=100, shape=(observation_length,), dtype=np.float32)
+        # all'interno della box c'è un vettore di dimensioni observation_length
+        # ogni elemento nell'array è compreso tra low and high ed è di tipo dtype
         self.rewards_history = []  # Initialize a list to track rewards
         
         # Inventory management parameters from config
@@ -29,6 +31,9 @@ class InventoryEnvGYConfig(gym.Env):
         self.coef_of_var = config['coef_of_var']
         self.shape = 1 / (self.coef_of_var ** 2)
         self.scale = self.mean_demand / self.shape
+
+        #seeds
+        self.seed(42)
         
         # Ensure all other necessary initializations are performed here
         self.reset()
@@ -53,7 +58,7 @@ class InventoryEnvGYConfig(gym.Env):
 
 
     def seed(self, seed=None):
-        np.random.seed(1000)
+        np.random.seed(seed)
         
     
     def step(self, action):

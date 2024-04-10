@@ -10,9 +10,10 @@ from env_chaaben import InventoryEnvGYConfig   # Adjusted import for your enviro
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = r'C:\Users\mprivitera\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations.xlsx'
+excel_path = r'D:\elebr\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
-configurations = df_configurations.to_dict('records')
+configurations = df_configurations.to_dict('records') # crea un dict con i nomi delle colonne come key e i valori nelle colonne come values
+
 
 def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
     total_rewards = []
@@ -104,31 +105,36 @@ def save_metrics_to_dataframe(metrics, config_details, avg_reward, std_reward, f
 
 
 
-total_configs = len(configurations)
+total_configs = len(configurations) # numero di righe nel dataset configurations
+# caso in cui total_config = 6
 # Calculate indices for the configurations to visualize
 indices_to_visualize = []
 
 # Add two from the beginning
-indices_to_visualize.extend([0, 1] if total_configs > 1 else [0])
+indices_to_visualize.extend([0, 1] if total_configs > 1 else [0]) # aggiungo 0 e 1
 
 # Calculate middle indices
 if total_configs > 4:
     middle_index1 = total_configs // 3  # Approximately one-third into the list
     middle_index2 = 2 * total_configs // 3  # Approximately two-thirds into the list
-    indices_to_visualize.extend([middle_index1, middle_index2])
+    indices_to_visualize.extend([middle_index1, middle_index2]) # aggiungo 2 e 4
 
 # Add two from the end
 if total_configs > 2:
-    indices_to_visualize.extend([total_configs-2, total_configs-1])
+    indices_to_visualize.extend([total_configs-2, total_configs-1]) # aggiungo 4 e 5
+
+# ottengo array di indici [0,1,2,4,5] e viene lasciato fuori il 3 (il quarto grafico non apparirà)
 
 # Adjust policy_kwargs and learning rate if needed
 policy_kwargs = dict(net_arch=[dict(pi=[32, 32], vf=[32, 32])])
+# In this case, it's specifying a feedforward neural network with two hidden layers for both the policy (pi) 
+# and the value function (vf). Each hidden layer has 32 units. This architecture configuration can be adjusted as needed.
 learning_rate = 1e-4
 
 # Loop through each configuration
 for config_index, config in enumerate(configurations):
     env = InventoryEnvGYConfig(config) # Initialize environment with current configuration
-    env.reset()
+    #env.reset()
 
     model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
                 learning_rate=learning_rate, n_steps=4096, batch_size=64,
@@ -144,7 +150,7 @@ for config_index, config in enumerate(configurations):
     callback = CallbackList([eval_callback, checkpoint_callback])
 
     # Train the model
-    total_timesteps =200000
+    total_timesteps =2000
     model.learn(total_timesteps=total_timesteps, callback=callback)
 
     # Evaluate the trained model
