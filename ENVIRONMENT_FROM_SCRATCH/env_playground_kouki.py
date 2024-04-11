@@ -10,7 +10,7 @@ from env_chaaben import InventoryEnvGYConfig   # Adjusted import for your enviro
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = r'D:\elebr\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations.xlsx'
+excel_path = r'C:\Users\mprivitera\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records') # crea un dict con i nomi delle colonne come key e i valori nelle colonne come values
 
@@ -28,10 +28,13 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
         episode_rewards = 0
         episode_metrics = {key: [] for key in metrics}
         episode_order_quantities = []  # Store order quantities for this episode
-
+        print(f'obs:{obs}')
         while not done:
             action, _states = model.predict(obs, deterministic=True)
-            obs, reward, done, info = env.step(action)
+            print(f'action:  {action}')
+            obs, reward, done, info = env.step(action) # qui una volta calcolato lo step viene registrato in info le order quantity che sarebbe l'azione
+            # ho il vettore, soddifso la domanda shifto e arriva l'azione
+            print(f'observation:{obs} and {info}')
             episode_rewards += reward
             
             # Log the order quantity for this step
@@ -87,10 +90,11 @@ class WarmupCallback(BaseCallback):
 def save_metrics_to_dataframe(metrics, config_details, avg_reward, std_reward, filename='evaluation_metrics.csv'):
     metrics['config_details'] = str(config_details)  # Add configuration details for comparison
     print(f'metrics dictionary: {metrics}')
-    print(f"Average Reward before DataFrame: {metrics['average_reward']}")
-    print(f"Reward STD before DataFrame: {metrics['reward_std']}")
     metrics['average_reward'] = avg_reward
     metrics['reward_std'] = std_reward
+    print(f"Average Reward before DataFrame: {metrics['average_reward']}")
+    print(f"Reward STD before DataFrame: {metrics['reward_std']}")
+    
     
     df = pd.DataFrame([metrics])
     print(df[['average_reward', 'reward_std']])
@@ -160,8 +164,8 @@ for config_index, config in enumerate(configurations):
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
     metrics_filename = f'evaluation_metrics.csv'
-    """  save_metrics_to_dataframe(detailed_metrics, config_details=config_str, avg_reward=mean_reward,
-                              std_reward=std_reward, filename=metrics_filename) """
+    save_metrics_to_dataframe(detailed_metrics, config_details=config_str, avg_reward=mean_reward,
+                              std_reward=std_reward, filename=metrics_filename)
     plot_filename = f'reward_convergence_{config_str}.pdf'
 
     # Load the logs and save the plot
