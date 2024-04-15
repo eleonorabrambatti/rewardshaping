@@ -18,19 +18,27 @@ class InventoryEnvGYConfig(gym.Env):
         self.L = config['L']
         self.Alpha = config['Alpha']
         self.p1 = config['p1']
+        self.price_transformed=0
+        self.holding_transformed=0
+        self.demand_not_satisfied=0
+        self.perishability=0
+        self.total_stock_green=0
         self.p2 = config['p2']
         self.c = config['c']
         self.h = config['h']
         self.b1 = config['b1']
-        self.b2 = config['b2']
+        #self.b2 = config['b2']
         self.w = config['w']
         self.beta = config['beta']
+        self.num_episodes= config['num_episodes']
+        self.total_timesteps= config['total_timesteps']
         
         # Demand distribution parameters
         self.mean_demand = config['mean_demand']
         self.coef_of_var = config['coef_of_var']
         self.shape = 1 / (self.coef_of_var ** 2)
         self.scale = self.mean_demand / self.shape
+        self.done=config['done']
 
         #seeds
         self.seed(42)
@@ -63,7 +71,7 @@ class InventoryEnvGYConfig(gym.Env):
     
     def step(self, action):
         #order_quantity = action[0] 
-        order_quantity = action
+        order_quantity=action
         #order_quantity = np.ceil(action).astype(int)
         #○print(f"Order Quantity: {order_quantity}")
         # Generate total demand
@@ -114,7 +122,11 @@ class InventoryEnvGYConfig(gym.Env):
         # Update green and yellow stocks for the next period
         self.green_stock = np.roll(self.green_stock, -1)
         self.green_stock[-1] = order_quantity  # Add new order at the end
-        
+        self.price_transformed=self.p1 * (self.initial_green_demand - lost_sales_green)
+        self.holding_transformed=self.h * (total_stock_green)
+        self.total_stock_green=total_stock_green
+        self.demand_not_satisfied=self.b1 * lost_sales_green
+        self.perishability=self.w * (expired_green)
         
         # Apply deterioration from green to yellow stock
         #yellow_stock_increase = self.green_stock[:self.m] * self.Alpha
@@ -147,13 +159,14 @@ class InventoryEnvGYConfig(gym.Env):
     #'satisfied_yellow': satisfied_yellow_demand,
     'reward': reward,
     'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0,
-    'order_quantity': order_quantity  # Include order_quantity here
+    'order_quantity': order_quantity # Include order_quantity here,
+
 }
         
         
         self.current_step += 1
-        done = self.current_step >= 10 # End episode after 100 steps or define your own condition
-        return self._next_observation(), reward, done, info
+        done = self.current_step >= self.done # End episode after 100 steps or define your own condition
+        return self._next_observation(), reward,  done, info
     
     def override_action_with_random(self):
         """

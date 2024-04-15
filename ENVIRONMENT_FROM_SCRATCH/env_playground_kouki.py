@@ -17,6 +17,8 @@ configurations = df_configurations.to_dict('records') # crea un dict con i nomi 
 
 def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
     total_rewards = []
+    total_price=[]
+    total_holding_cost=[]
     metrics = {
         # your metrics initialization
     }
@@ -26,8 +28,12 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
         obs = env.reset()
         done = False
         episode_rewards = 0
+        episode_price = 0
+        episode_holding_cost=0
+        
         episode_metrics = {key: [] for key in metrics}
         episode_order_quantities = []  # Store order quantities for this episode
+
         print(f'obs:{obs}')
         while not done:
             action, _states = model.predict(obs, deterministic=True)
@@ -36,6 +42,11 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
             # ho il vettore, soddifso la domanda shifto e arriva l'azione
             print(f'observation:{obs} and {info}')
             episode_rewards += reward
+            episode_price += env.price_transformed
+            print(f'total stock:{env.total_stock_green}')
+            print(f'holding_tranformed:{env.holding_transformed}')
+            episode_holding_cost +=env.holding_transformed
+
             
             # Log the order quantity for this step
             if 'order_quantity' in info:
@@ -48,6 +59,8 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
                     episode_metrics[key].append(info[key])
 
         total_rewards.append(episode_rewards)
+        total_price.append(episode_price)
+        total_holding_cost.append(episode_holding_cost)
         order_quantities.append(episode_order_quantities)  # Add this episode's orders to the list
         
         # Calculate and aggregate episode metrics
@@ -57,15 +70,18 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
     avg_metrics = {key: np.mean(value) for key, value in metrics.items()}
     avg_reward = np.mean(total_rewards)
     std_reward = np.std(total_rewards)
+
+    avg_price = np.mean(total_price)
+    avg_hc=np.mean(total_holding_cost)
     
     # After evaluation, print or analyze order quantities
     print("Order quantities during evaluation:")
     for ep_num, quantities in enumerate(order_quantities, start=1):
         print(f"Episode {ep_num}: {quantities}")
     
-    print(f"Average Reward: {avg_reward}, Reward STD: {std_reward}")
+    print(f"Average Reward: {avg_reward}, Reward STD: {std_reward}, Average price: {avg_price}, Average holding cost: {avg_hc}")
      
-    return avg_reward, std_reward, avg_metrics
+    return avg_reward, avg_price, avg_hc, std_reward, avg_metrics
 
 class WarmupCallback(BaseCallback):
     def __init__(self, warmup_steps=10000, start_prob=1.0, end_prob=0.1, verbose=0):
@@ -87,17 +103,19 @@ class WarmupCallback(BaseCallback):
         return True
 
 
-def save_metrics_to_dataframe(metrics, config_details, avg_reward, std_reward, filename='evaluation_metrics.csv'):
+def save_metrics_to_dataframe(metrics, config_details, avg_reward, avg_price,avg_hc, std_reward, filename='evaluation_metrics.csv'):
     metrics['config_details'] = str(config_details)  # Add configuration details for comparison
     print(f'metrics dictionary: {metrics}')
     metrics['average_reward'] = avg_reward
     metrics['reward_std'] = std_reward
+    metrics['average price']= avg_price
+    metrics['average holding cost']= avg_hc
     print(f"Average Reward before DataFrame: {metrics['average_reward']}")
     print(f"Reward STD before DataFrame: {metrics['reward_std']}")
     
     
     df = pd.DataFrame([metrics])
-    print(df[['average_reward', 'reward_std']])
+    print(df[['average_reward', 'reward_std','average price','average holding cost']])
    
    
     
@@ -112,20 +130,20 @@ def save_metrics_to_dataframe(metrics, config_details, avg_reward, std_reward, f
 total_configs = len(configurations) # numero di righe nel dataset configurations
 # caso in cui total_config = 6
 # Calculate indices for the configurations to visualize
-indices_to_visualize = []
+#indices_to_visualize = []
 
 # Add two from the beginning
-indices_to_visualize.extend([0, 1] if total_configs > 1 else [0]) # aggiungo 0 e 1
+#indices_to_visualize.extend([0, 1] if total_configs > 1 else [0]) # aggiungo 0 e 1
 
 # Calculate middle indices
-if total_configs > 4:
-    middle_index1 = total_configs // 3  # Approximately one-third into the list
-    middle_index2 = 2 * total_configs // 3  # Approximately two-thirds into the list
-    indices_to_visualize.extend([middle_index1, middle_index2]) # aggiungo 2 e 4
+#if total_configs > 4:
+#    middle_index1 = total_configs // 3  # Approximately one-third into the list
+#    middle_index2 = 2 * total_configs // 3  # Approximately two-thirds into the list
+#    indices_to_visualize.extend([middle_index1, middle_index2]) # aggiungo 2 e 4
 
 # Add two from the end
-if total_configs > 2:
-    indices_to_visualize.extend([total_configs-2, total_configs-1]) # aggiungo 4 e 5
+#if total_configs > 2:
+#    indices_to_visualize.extend([total_configs-2, total_configs-1]) # aggiungo 4 e 5
 
 # ottengo array di indici [0,1,2,4,5] e viene lasciato fuori il 3 (il quarto grafico non apparirà)
 
@@ -148,44 +166,44 @@ for config_index, config in enumerate(configurations):
 
 
     # Callbacks setup
-    eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=1000,
+    eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=env.num_episodes,
                                  deterministic=True, render=False)
-    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path='./logs/', name_prefix='ppo_model')
+    checkpoint_callback = CheckpointCallback(save_freq=env.num_episodes, save_path='./logs/', name_prefix='ppo_model')
     callback = CallbackList([eval_callback, checkpoint_callback])
 
     # Train the model
-    total_timesteps =2000
+    total_timesteps = env.total_timesteps
     model.learn(total_timesteps=total_timesteps, callback=callback)
 
     # Evaluate the trained model
-    mean_reward, std_reward, detailed_metrics =evaluate_policy_and_log_detailed_metrics(model,
+    mean_reward, mean_price, mean_hc, std_reward, detailed_metrics = evaluate_policy_and_log_detailed_metrics(model,
                                     env,n_eval_episodes=100)
 
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
     metrics_filename = f'evaluation_metrics.csv'
-    save_metrics_to_dataframe(detailed_metrics, config_details=config_str, avg_reward=mean_reward,
+    save_metrics_to_dataframe(detailed_metrics, config_details=config_str, avg_reward=mean_reward, avg_price=mean_price, avg_hc=mean_hc,
                               std_reward=std_reward, filename=metrics_filename)
     plot_filename = f'reward_convergence_{config_str}.pdf'
-
+    
     # Load the logs and save the plot
     logs = np.load('./logs/evaluations.npz')
     timesteps = logs['timesteps']
     results = logs['results']
     
-    if config_index in indices_to_visualize:
+    #if config_index in indices_to_visualize:
        # Generate and save the plot only for selected configurations
-       plt.figure(figsize=(10, 6))
-       plt.plot(timesteps, results.mean(axis=1))
-       plt.fill_between(timesteps, results.mean(axis=1) - results.std(axis=1), results.mean(axis=1) + results.std(axis=1), alpha=0.3)
-       plt.xlabel('Timesteps')
-       plt.ylabel('Mean Reward')
-       
-       # Create a more spaced-out title
-       config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
-       plt.title(f'Reward Convergence - Config: {config_str}\n', pad=20)  # Add pad for space
-       
-       plt.grid(True)
-       plot_filename = f'reward_convergence_{config_str}.pdf'
-       plt.savefig(plot_filename, dpi=300)  # Saves the plot with a dynamic name
-       plt.close()  # Close the plot explicitly to free up memory
+    plt.figure(figsize=(10, 6))
+    plt.plot(timesteps, results.mean(axis=1))
+    plt.fill_between(timesteps, results.mean(axis=1) - results.std(axis=1), results.mean(axis=1) + results.std(axis=1), alpha=0.3)
+    plt.xlabel('Timesteps')
+    plt.ylabel('Mean Reward')
+    
+    # Create a more spaced-out title
+    config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
+    plt.title(f'Reward Convergence - Config: {config_str}\n', pad=20)  # Add pad for space
+    
+    plt.grid(True)
+    plot_filename = f'reward_convergence_{config_str}.pdf'
+    plt.savefig(plot_filename, dpi=300)  # Saves the plot with a dynamic name
+    plt.close()  # Close the plot explicitly to free up memory
