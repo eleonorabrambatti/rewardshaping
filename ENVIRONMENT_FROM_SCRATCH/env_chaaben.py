@@ -118,13 +118,13 @@ class InventoryEnvGYConfig(gym.Env):
         
         reward /= 100.0  # Divide the reward by 100
         self.rewards_history.append(reward)  # Track the reward for each step
-        
+        self.total_stock_green=total_stock_green
         # Update green and yellow stocks for the next period
         self.green_stock = np.roll(self.green_stock, -1)
         self.green_stock[-1] = order_quantity  # Add new order at the end
         self.price_transformed=self.p1 * (self.initial_green_demand - lost_sales_green)
         self.holding_transformed=self.h * (total_stock_green)
-        self.total_stock_green=total_stock_green
+        #self.total_stock_green=total_stock_green
         self.demand_not_satisfied=self.b1 * lost_sales_green
         self.perishability=self.w * (expired_green)
         

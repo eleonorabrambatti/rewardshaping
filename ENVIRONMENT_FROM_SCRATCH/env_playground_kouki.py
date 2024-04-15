@@ -19,6 +19,8 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
     total_rewards = []
     total_price=[]
     total_holding_cost=[]
+    total_demand_not_satisfied=[]
+    total_perishability_cost=[]
     metrics = {
         # your metrics initialization
     }
@@ -30,6 +32,8 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
         episode_rewards = 0
         episode_price = 0
         episode_holding_cost=0
+        episode_demand_not_satisfied_cost=0
+        episode_perishability=0
         
         episode_metrics = {key: [] for key in metrics}
         episode_order_quantities = []  # Store order quantities for this episode
@@ -43,10 +47,15 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
             print(f'observation:{obs} and {info}')
             episode_rewards += reward
             episode_price += env.price_transformed
-            print(f'total stock:{env.total_stock_green}')
-            print(f'holding_tranformed:{env.holding_transformed}')
+            
+    
             episode_holding_cost +=env.holding_transformed
+            episode_demand_not_satisfied_cost+=env.demand_not_satisfied
+            episode_perishability+=env.perishability
 
+            print(f'holding_tranformed:{env.holding_transformed}')
+            print(f'demand_not_satisfied:{env.demand_not_satisfied}')
+            print(f'perishability: {env.perishability}')
             
             # Log the order quantity for this step
             if 'order_quantity' in info:
@@ -61,6 +70,8 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
         total_rewards.append(episode_rewards)
         total_price.append(episode_price)
         total_holding_cost.append(episode_holding_cost)
+        total_demand_not_satisfied.append(episode_demand_not_satisfied_cost)
+        total_perishability_cost.append(episode_perishability)
         order_quantities.append(episode_order_quantities)  # Add this episode's orders to the list
         
         # Calculate and aggregate episode metrics
@@ -73,15 +84,17 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
 
     avg_price = np.mean(total_price)
     avg_hc=np.mean(total_holding_cost)
+    avg_dns=np.mean(total_demand_not_satisfied)
+    avg_perish=np.mean(total_perishability_cost)
     
     # After evaluation, print or analyze order quantities
     print("Order quantities during evaluation:")
     for ep_num, quantities in enumerate(order_quantities, start=1):
         print(f"Episode {ep_num}: {quantities}")
     
-    print(f"Average Reward: {avg_reward}, Reward STD: {std_reward}, Average price: {avg_price}, Average holding cost: {avg_hc}")
+    print(f"Average Reward: {avg_reward}, Reward STD: {std_reward}, Average price: {avg_price}, Average holding cost: {avg_hc}. Average demand not satisfied: {avg_dns}, Average perishability cost: {avg_perish}")
      
-    return avg_reward, avg_price, avg_hc, std_reward, avg_metrics
+    return avg_reward, avg_price, avg_hc, avg_dns, avg_perish, std_reward, avg_metrics
 
 class WarmupCallback(BaseCallback):
     def __init__(self, warmup_steps=10000, start_prob=1.0, end_prob=0.1, verbose=0):
@@ -103,19 +116,21 @@ class WarmupCallback(BaseCallback):
         return True
 
 
-def save_metrics_to_dataframe(metrics, config_details, avg_reward, avg_price,avg_hc, std_reward, filename='evaluation_metrics.csv'):
+def save_metrics_to_dataframe(metrics, config_details, avg_reward, avg_price,avg_hc,avg_dns, avg_perish, std_reward, filename='evaluation_metrics.csv'):
     metrics['config_details'] = str(config_details)  # Add configuration details for comparison
     print(f'metrics dictionary: {metrics}')
     metrics['average_reward'] = avg_reward
     metrics['reward_std'] = std_reward
     metrics['average price']= avg_price
     metrics['average holding cost']= avg_hc
+    metrics['average demand not satisfied']= avg_dns
+    metrics['average perishability cost']=avg_perish
     print(f"Average Reward before DataFrame: {metrics['average_reward']}")
     print(f"Reward STD before DataFrame: {metrics['reward_std']}")
     
     
     df = pd.DataFrame([metrics])
-    print(df[['average_reward', 'reward_std','average price','average holding cost']])
+    print(df[['average_reward', 'reward_std','average price','average holding cost', 'average demand not satisfied', 'average perishability cost']])
    
    
     
@@ -176,13 +191,13 @@ for config_index, config in enumerate(configurations):
     model.learn(total_timesteps=total_timesteps, callback=callback)
 
     # Evaluate the trained model
-    mean_reward, mean_price, mean_hc, std_reward, detailed_metrics = evaluate_policy_and_log_detailed_metrics(model,
+    mean_reward, mean_price, mean_hc, mean_dns, mean_perish, std_reward, detailed_metrics = evaluate_policy_and_log_detailed_metrics(model,
                                     env,n_eval_episodes=100)
 
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
     metrics_filename = f'evaluation_metrics.csv'
-    save_metrics_to_dataframe(detailed_metrics, config_details=config_str, avg_reward=mean_reward, avg_price=mean_price, avg_hc=mean_hc,
+    save_metrics_to_dataframe(detailed_metrics, config_details=config_str, avg_reward=mean_reward, avg_price=mean_price, avg_hc=mean_hc, avg_dns=mean_dns, avg_perish=mean_perish,
                               std_reward=std_reward, filename=metrics_filename)
     plot_filename = f'reward_convergence_{config_str}.pdf'
     
