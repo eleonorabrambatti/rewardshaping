@@ -8,7 +8,7 @@ from BaseStockGY_Config import BaseStockGYConfig   # Adjusted import for your en
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = 'C:/Users/kouki/Documents/Sirine Project/Normalized/configurations.xlsx'
+excel_path = r'C:\Users\mprivitera\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations 1.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records')
 def optimize_base_stock(env, min_base_stock, max_base_stock, num_episodes_per_level):
@@ -52,13 +52,9 @@ def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes=1000)
     total_rewards = []
     metrics = {
         'expired_green': [],
-        'expired_yellow': [],
         'stock_green': [],
-        'stock_yellow': [],
         'lost_sales_green': [],
-        'lost_sales_yellow': [],
         'satisfied_green': [],
-        'satisfied_yellow': [],
         'base_stock_level': [],
         'average_reward': [],
         'reward_std': [],
@@ -151,7 +147,7 @@ for config_index, config in enumerate(configurations):
                                                                                 n_eval_episodes=3000)
     print(f"Evaluation of Optimal S: Average Reward = {mean_reward}, Reward STD = {std_reward}")
     
-    break
+
 
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
