@@ -8,7 +8,7 @@ from BaseStockGY_Config import BaseStockGYConfig   # Adjusted import for your en
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = r'C:\Users\mprivitera\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations 1.xlsx'
+excel_path = r'C:\Users\ebrambatti\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations 1.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records')
 def optimize_base_stock(env, min_base_stock, max_base_stock, num_episodes_per_level):
@@ -48,30 +48,30 @@ def optimize_base_stock(env, min_base_stock, max_base_stock, num_episodes_per_le
     
     return best_base_stock, best_average_reward
 
-def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes=1000):
+def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes):
     total_rewards = []
     metrics = {
         'expired_green': [],
+        'expired_yellow': [],
         'stock_green': [],
+        'stock_yellow': [],
         'lost_sales_green': [],
+        'lost_sales_yellow': [],
         'satisfied_green': [],
+        'satisfied_yellow': [],
         'base_stock_level': [],
         'average_reward': [],
         'reward_std': [],
-    } 
-    env.base_stock_level = base_stock_level  
-    # Example conversion
+    }
     for episode in range(n_eval_episodes):
-        #env.reset()  # Reset the environment for a new episode
-        #env.base_stock_level = base_stock_level  # Directly set the base stock level for evaluation
+        env.reset()  # Reset the environment for a new episode
+        env.base_stock_level = base_stock_level  # Set the base stock level for this episode
         done = False
         episode_rewards = 0
         episode_metrics = {key: [] for key in metrics.keys()}
 
         while not done:
-            
-            #action = env.action_space.sample()  # You might not need this if actions are not relevant in this context
-            obs, reward, done, info = env.Simulate_step() # Simulate the environment's step
+            obs, reward, done, info = env.Simulate_step()  # Assuming Simulate_step handles the episode without requiring explicit actions
             episode_rewards += reward
 
             # Accumulate metrics for each step
@@ -137,14 +137,14 @@ for config_index, config in enumerate(configurations):
     env.seed(42)
 
 
-    optimal_base_stock, optimal_reward = optimize_base_stock(env, 0,
-                                                             50, 1000)
-    #print(f"Optimal Base Stock Level: {optimal_base_stock}, with an average reward of: {optimal_reward}")
+    optimal_base_stock, optimal_reward = optimize_base_stock(env, 50,
+                                                             50, 1)
+    print(f"Optimal Base Stock Level: {optimal_base_stock}, with an average reward of: {optimal_reward}")
     env.reset()
  
     # Evaluate the trained model
     mean_reward, std_reward, detailed_metrics = evaluate_base_stock_performance(env, optimal_base_stock,
-                                                                                n_eval_episodes=3000)
+                                                                                n_eval_episodes=1)
     print(f"Evaluation of Optimal S: Average Reward = {mean_reward}, Reward STD = {std_reward}")
     
 
