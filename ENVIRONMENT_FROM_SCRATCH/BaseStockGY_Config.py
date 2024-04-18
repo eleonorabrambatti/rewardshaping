@@ -29,7 +29,7 @@ class BaseStockGYConfig(gym.Env):
         self.coef_of_var = config['coef_of_var']
         self.shape = 1 / (self.coef_of_var ** 2)
         self.scale = self.mean_demand / self.shape
-        self.base_stock_level = 50
+        self.base_stock_level = None
         # Ensure all other necessary initializations are performed here
         self.reset()
 
@@ -40,7 +40,7 @@ class BaseStockGYConfig(gym.Env):
         self.current_step = 0
         self.initial_green_demand = 0  # Initialize demands for observation
         #self.initial_yellow_demand = 0
-        self.base_stock_level = 50
+        self.base_stock_level = None
         #print("Starting a new episode...")
         return self._next_observation()
 
@@ -106,7 +106,7 @@ class BaseStockGYConfig(gym.Env):
         reward = (self.p1 * (self.initial_green_demand - lost_sales_green)
                   #self.p2 * (self.initial_yellow_demand - lost_sales_yellow) -
                   -self.c * order_quantity - self.h * (total_stock_green )#+ total_stock_yellow)
-                  #self.b1 * lost_sales_green - self.b2 * lost_sales_yellow -
+                  -self.b1 * lost_sales_green #- self.b2 * lost_sales_yellow -
                   -self.w * (expired_green ))#+ expired_yellow))
         
         reward /= 1.0  # Divide the reward by 100
@@ -197,7 +197,7 @@ class BaseStockGYConfig(gym.Env):
                   self.b1 * lost_sales_green 
                   -self.w * (expired_green)) #+ expired_yellow))
         
-        reward /= 1.0  # Divide the reward by 100
+        reward /= 100.0  # Divide the reward by 100
         self.rewards_history.append(reward)  # Track the reward for each step
         print(f"Step: {self.current_step}, Base Stock Level: {self.base_stock_level}, Order Quantity: {order_quantity}, Current Inventory Level: {current_inventory_level}, Demand: {total_demand}, Reward: {reward}")
         print(f"Step: {self.current_step}, stock: {np.sum(self.green_stock[:self.m]) },lost: {lost_sales_green}, outdate: { expired_green}, sales {self.p1 * (self.initial_green_demand - lost_sales_green) }, Reward: {reward}")
@@ -238,6 +238,8 @@ class BaseStockGYConfig(gym.Env):
         #print(info)
         self.current_step += 1
         done = self.current_step >= 10 # End episode after 10 steps or define your own condition
+        if done:
+             self.current_step = 0 
         return self._next_observation(), reward, done, info
 
 

@@ -30,7 +30,8 @@ def optimize_base_stock(env, min_base_stock, max_base_stock, num_episodes_per_le
     for base_stock_level in range(min_base_stock, max_base_stock + 1):
         total_reward = 0
         env.reset()  # Reset the environment for a new episode
-        for _ in range(num_episodes_per_level):
+        for i in range(num_episodes_per_level):
+            print(f' num episodes: {i}')
             #env.reset()  # Reset the environment for a new episode
             env.base_stock_level = base_stock_level  # Set the base stock level for this episode
             done = False
@@ -40,7 +41,7 @@ def optimize_base_stock(env, min_base_stock, max_base_stock, num_episodes_per_le
                 _, reward, done, _=env.Simulate_step()
                 total_reward += reward
         average_reward = total_reward / num_episodes_per_level
-        #print(f"Base Stock Level: {base_stock_level}, Average Reward: {average_reward}")
+        print(f"Base Stock Level: {base_stock_level}, Average Reward: {average_reward}")
         
         if average_reward > best_average_reward:
             best_average_reward = average_reward
@@ -73,6 +74,7 @@ def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes):
         while not done:
             obs, reward, done, info = env.Simulate_step()  # Assuming Simulate_step handles the episode without requiring explicit actions
             episode_rewards += reward
+            
 
             # Accumulate metrics for each step
             for key in episode_metrics:
@@ -82,12 +84,13 @@ def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes):
 
         # Aggregate episode metrics
         for key in metrics:
-            metrics[key].append(np.mean(episode_metrics[key]))
+            metrics[key].append(np.sum(episode_metrics[key]))
 
     # Calculate and return average metrics over all episodes
     avg_metrics = {key: np.mean(value) for key, value in metrics.items()}
     avg_reward = np.mean(total_rewards)
     std_reward = np.std(total_rewards)
+    print(f'metrics: {metrics}')
 
     return avg_reward, std_reward, avg_metrics
 
@@ -137,18 +140,18 @@ for config_index, config in enumerate(configurations):
     env.seed(42)
 
 
-    optimal_base_stock, optimal_reward = optimize_base_stock(env, 50,
-                                                             50, 1)
+    optimal_base_stock, optimal_reward = optimize_base_stock(env, 16,
+                                                             16, 3)
     print(f"Optimal Base Stock Level: {optimal_base_stock}, with an average reward of: {optimal_reward}")
     env.reset()
  
     # Evaluate the trained model
     mean_reward, std_reward, detailed_metrics = evaluate_base_stock_performance(env, optimal_base_stock,
-                                                                                n_eval_episodes=1)
+                                                                                n_eval_episodes=1000)
     print(f"Evaluation of Optimal S: Average Reward = {mean_reward}, Reward STD = {std_reward}")
     
 
-
+   
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
     metrics_filename = f'BSevaluation_metrics.csv'
@@ -157,10 +160,11 @@ for config_index, config in enumerate(configurations):
                               filename=metrics_filename)
     plot_filename = f'reward_convergence_{config_str}.pdf'
 
+    break
     # Load the logs and save the plot
-    logs = np.load('./logs/evaluations.npz')
-    timesteps = logs['timesteps']
-    results = logs['results']
+    logs_1 = np.load('./logs_1/evaluations.npz')
+    timesteps = logs_1['timesteps']
+    results = logs_1['results']
     
     if config_index in indices_to_visualize:
        # Generate and save the plot only for selected configurations
