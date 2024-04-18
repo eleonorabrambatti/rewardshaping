@@ -232,8 +232,14 @@ class BaseStockGYConfig(gym.Env):
                 #'satisfied_yellow': satisfied_yellow_demand,  # You need to calculate this
                 'base_stock_level': self.base_stock_level, # The base stock level value
                 'reward': reward,  # Include current step's reward
+                'reward_components': {
+                'holding_cost': total_stock_green,
+                'lost_sales_cost': lost_sales_green,
+                'expired_stock_cost': expired_green,
+                'Satisfied demand':(self.initial_green_demand - lost_sales_green)},
                 # Calculate and include the standard deviation of rewards up to the current step
                 'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
+        
                 }
         #print(info)
         self.current_step += 1

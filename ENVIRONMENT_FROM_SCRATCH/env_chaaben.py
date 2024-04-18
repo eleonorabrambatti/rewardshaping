@@ -110,7 +110,7 @@ class InventoryEnvGYConfig(gym.Env):
         #satisfied_yellow_demand=(self.initial_yellow_demand - lost_sales_yellow)
         total_stock_green = np.sum(self.green_stock[:self.m])  # Sum only the first m elements
         #total_stock_yellow = np.sum(self.yellow_stock)
-        reward = (self.p1 * (self.initial_green_demand - lost_sales_green) +
+        reward = (self.p1 * (self.initial_green_demand - lost_sales_green) 
                   #self.p2 * (self.initial_yellow_demand - lost_sales_yellow) -
                   - self.c * order_quantity - self.h * (total_stock_green) #+ total_stock_yellow) 
                   - self.b1 * lost_sales_green #- self.b2 * lost_sales_yellow -
@@ -122,11 +122,11 @@ class InventoryEnvGYConfig(gym.Env):
         # Update green and yellow stocks for the next period
         self.green_stock = np.roll(self.green_stock, -1)
         self.green_stock[-1] = order_quantity  # Add new order at the end
-        self.price_transformed=self.p1 * (self.initial_green_demand - lost_sales_green)
-        self.holding_transformed=self.h * (total_stock_green)
+        self.price_transformed=(self.p1 * (self.initial_green_demand - lost_sales_green))
+        self.holding_transformed=(self.h * (total_stock_green))
         #self.total_stock_green=total_stock_green
-        self.demand_not_satisfied=self.b1 * lost_sales_green
-        self.perishability=self.w * (expired_green)
+        self.demand_not_satisfied=(self.b1 * lost_sales_green)
+        self.perishability=(self.w * (expired_green))
         
         # Apply deterioration from green to yellow stock
         #yellow_stock_increase = self.green_stock[:self.m] * self.Alpha

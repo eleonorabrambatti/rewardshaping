@@ -10,7 +10,7 @@ from env_chaaben import InventoryEnvGYConfig   # Adjusted import for your enviro
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = r'C:\Users\ebrambatti\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations.xlsx'
+excel_path = r'C:\Users\mprivitera\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records') # crea un dict con i nomi delle colonne come key e i valori nelle colonne come values
 

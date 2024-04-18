@@ -8,7 +8,7 @@ from BaseStockGY_Config import BaseStockGYConfig   # Adjusted import for your en
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = r'C:\Users\ebrambatti\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations 1.xlsx'
+excel_path = r'C:\Users\mprivitera\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations 1.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records')
 def optimize_base_stock(env, min_base_stock, max_base_stock, num_episodes_per_level):
@@ -51,48 +51,55 @@ def optimize_base_stock(env, min_base_stock, max_base_stock, num_episodes_per_le
 
 def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes):
     total_rewards = []
-    metrics = {
-        'expired_green': [],
-        'expired_yellow': [],
-        'stock_green': [],
-        'stock_yellow': [],
-        'lost_sales_green': [],
-        'lost_sales_yellow': [],
-        'satisfied_green': [],
-        'satisfied_yellow': [],
-        'base_stock_level': [],
-        'average_reward': [],
-        'reward_std': [],
+    
+    # Initialize storage for reward components
+    reward_components_summary = {
+        'holding_cost': [],
+        'lost_sales_cost': [],
+        'expired_stock_cost': [],
+        'ordering_cost': [],
+         'Satisfied demand': []
     }
+    
+    # Initialize storage for sum of reward components per episode
+    episode_components_sum = {
+        'holding_cost': [],
+        'lost_sales_cost': [],
+        'expired_stock_cost': [],
+        'ordering_cost': [],
+         'Satisfied demand': []
+    }
+    
     for episode in range(n_eval_episodes):
-        env.reset()  # Reset the environment for a new episode
-        env.base_stock_level = base_stock_level  # Set the base stock level for this episode
+        env.reset()
+        env.base_stock_level = base_stock_level  # Ensure consistent naming for setting base stock level
         done = False
-        episode_rewards = 0
-        episode_metrics = {key: [] for key in metrics.keys()}
-
+        episode_rewards = []
+        temp_components = {key: [] for key in reward_components_summary}  # Temporary storage for this episode's components
+        
         while not done:
-            obs, reward, done, info = env.Simulate_step()  # Assuming Simulate_step handles the episode without requiring explicit actions
-            episode_rewards += reward
+            _, reward, done, info = env.Simulate_step()
+            episode_rewards.append(reward)
             
+            # Extract and temporarily store reward components from the info dictionary for this episode
+            for component, value in info['reward_components'].items():
+                temp_components[component].append(value)
 
-            # Accumulate metrics for each step
-            for key in episode_metrics:
-                episode_metrics[key].append(info.get(key, 0))
+        # Aggregate total rewards for the episode
+        total_rewards.append(sum(episode_rewards))
+        
+        # Sum and store each component for the episode
+        for component in temp_components:
+            episode_components_sum[component].append(sum(temp_components[component]))
+        
+    # Compute average of the components sums and total rewards over all episodes
+    for component in reward_components_summary.keys():
+        reward_components_summary[component] = np.mean(episode_components_sum[component])
 
-        total_rewards.append(episode_rewards)
+    reward_components_summary['average_reward'] = np.mean(total_rewards)
+    reward_components_summary['stdv_reward'] = np.std(total_rewards)
 
-        # Aggregate episode metrics
-        for key in metrics:
-            metrics[key].append(np.sum(episode_metrics[key]))
-
-    # Calculate and return average metrics over all episodes
-    avg_metrics = {key: np.mean(value) for key, value in metrics.items()}
-    avg_reward = np.mean(total_rewards)
-    std_reward = np.std(total_rewards)
-    print(f'metrics: {metrics}')
-
-    return avg_reward, std_reward, avg_metrics
+    return reward_components_summary
 
 
 
@@ -140,18 +147,17 @@ for config_index, config in enumerate(configurations):
     env.seed(42)
 
 
-    optimal_base_stock, optimal_reward = optimize_base_stock(env, 16,
-                                                             16, 3)
+    optimal_base_stock, optimal_reward = optimize_base_stock(env, 0,
+                                                             50, 3)
     print(f"Optimal Base Stock Level: {optimal_base_stock}, with an average reward of: {optimal_reward}")
     env.reset()
  
     # Evaluate the trained model
-    mean_reward, std_reward, detailed_metrics = evaluate_base_stock_performance(env, optimal_base_stock,
-                                                                                n_eval_episodes=1000)
-    print(f"Evaluation of Optimal S: Average Reward = {mean_reward}, Reward STD = {std_reward}")
+    reward_components_summary = evaluate_base_stock_performance(env, optimal_base_stock,n_eval_episodes=1000)
+    print(f"Ereward_components_summary: {reward_components_summary }")
     
 
-   
+    break
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
     metrics_filename = f'BSevaluation_metrics.csv'
