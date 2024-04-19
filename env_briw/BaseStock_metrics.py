@@ -104,7 +104,7 @@ def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes):
 
 
 def save_metrics_to_dataframe(metrics, config_details, avg_reward, std_reward,
-                              filename='BSevaluation_metrics.csv'):
+                              filename='evaluation_metrics_BS.csv'):
     metrics['config_details'] = str(config_details)  # Add configuration details for comparison
     print(f"Average Reward before DataFrame: {metrics['average_reward']}")
     print(f"Reward STD before DataFrame: {metrics['reward_std']}")
@@ -157,10 +157,10 @@ for config_index, config in enumerate(configurations):
     print(f"Reward_components_summary: {reward_components_summary }")
     
 
-    break
+    
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
-    metrics_filename = f'BSevaluation_metrics.csv'
+    metrics_filename = f'evaluation_metrics_BS.csv'
     save_metrics_to_dataframe(detailed_metrics, config_details=config_str,
                               avg_reward=mean_reward, std_reward=std_reward,
                               filename=metrics_filename)
