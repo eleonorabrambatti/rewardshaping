@@ -8,7 +8,7 @@ from BaseStock_env import BaseStockConfig   # Adjusted import for your environme
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = r'..\rewardshaping\configurations_bs.xlsx'
+excel_path = r'..\rewardshaping\configurations.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records')
 def optimize_base_stock(env, min_base_stock, max_base_stock, num_episodes_per_level):
@@ -140,7 +140,12 @@ if total_configs > 4:
 if total_configs > 2:
     indices_to_visualize.extend([total_configs-2, total_configs-1])
 
+import csv
+# Define CSV file path
+csv_file_path = "reward_components_summary.csv"
 
+# Initialize a flag to indicate if the CSV file has been created
+csv_created = False
 # Loop through each configuration
 for config_index, config in enumerate(configurations):
     env = BaseStockConfig(config) # Initialize environment with current configuration
@@ -148,43 +153,26 @@ for config_index, config in enumerate(configurations):
 
 
     optimal_base_stock, optimal_reward = optimize_base_stock(env, 0,
-                                                             50, 3)
+                                                             50, 1000)
     print(f"Optimal Base Stock Level: {optimal_base_stock}, with an average reward of: {optimal_reward}")
     env.reset()
  
     # Evaluate the trained model
-    reward_components_summary = evaluate_base_stock_performance(env, optimal_base_stock,n_eval_episodes=10)
+    reward_components_summary = evaluate_base_stock_performance(env, optimal_base_stock,n_eval_episodes=100)
     print(f"Reward_components_summary: {reward_components_summary }")
+
+    # If CSV file has not been created yet, write header
+    if not csv_created:
+        with open(csv_file_path, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Configuration", "Reward Component", "Value"])
+        csv_created = True
+
+    # Write reward components to CSV file
+    with open(csv_file_path, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        for component, value in reward_components_summary.items():
+            writer.writerow([config_index, component, value])
     
 
-    break
-    # Generate a unique filename suffix from configuration for saving results
-    config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
-    metrics_filename = f'BSevaluation_metrics.csv'
-    save_metrics_to_dataframe(detailed_metrics, config_details=config_str,
-                              avg_reward=mean_reward, std_reward=std_reward,
-                              filename=metrics_filename)
-    plot_filename = f'reward_convergence_{config_str}.pdf'
-
-    break
-    # Load the logs and save the plot
-    logs_1 = np.load('./logs_1/evaluations.npz')
-    timesteps = logs_1['timesteps']
-    results = logs_1['results']
     
-    if config_index in indices_to_visualize:
-       # Generate and save the plot only for selected configurations
-       plt.figure(figsize=(10, 6))
-       plt.plot(timesteps, results.mean(axis=1))
-       plt.fill_between(timesteps, results.mean(axis=1) - results.std(axis=1), results.mean(axis=1) + results.std(axis=1), alpha=0.3)
-       plt.xlabel('Timesteps')
-       plt.ylabel('Mean Reward')
-       
-       # Create a more spaced-out title
-       config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
-       plt.title(f'Reward Convergence - Config: {config_str}\n', pad=20)  # Add pad for space
-       
-       plt.grid(True)
-       plot_filename = f'reward_convergence_{config_str}.pdf'
-       plt.savefig(plot_filename, dpi=300)  # Saves the plot with a dynamic name
-       plt.close()  # Close the plot explicitly to free up memory

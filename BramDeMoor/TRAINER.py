@@ -1,5 +1,5 @@
 from ENV_TRAIN import Retail_Environment
-from DQN_cleanrl import DQN_Agent
+from UNSHAPED_DQN import DQN_Agent
 #from SHAPED_B import DQN_Agent
 #from SHAPED_BLE import DQN_Agent
 #from BASESTOCK_POLICY import DQN_Agent
@@ -12,11 +12,11 @@ x = 0
 
 #################################
 MEAN_DEMAND = 4
-CV = 0.5
-LIFETIME = 3
+CV = 0.3
+LIFETIME = 4
 LEADTIME = 2
-C_LOST = 20
-C_HOLD = 0.5
+C_LOST = 10
+C_HOLD = 1
 C_PERISH = 2
 C_ORDER = 0
 FIFO = True	
@@ -31,7 +31,7 @@ PSI_DECAY = 0.99 # non usato
 EPSILON_MIN = 0.01
 LEARNING_RATE = 0.001
 
-EPOCHS = 40
+EPOCHS = 50
 BATCH_SIZE = 32
 UPDATE = 20
 #################################

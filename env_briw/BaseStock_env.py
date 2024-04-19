@@ -151,10 +151,10 @@ class BaseStockConfig(gym.Env):
                 'base_stock_level': self.base_stock_level, # The base stock level value
                 'reward': reward,  # Include current step's reward
                 'reward_components': {
-                'holding_cost': total_stock,
-                'lost_sales_cost': lost_sales,
-                'expired_stock_cost': expired,
-                'Satisfied demand':(satisfied_demand)},
+                'holding_cost':self.h *(total_stock),
+                'lost_sales_cost': self.b * lost_sales,
+                'expired_stock_cost': self.w * (expired),
+                'Satisfied demand':(self.p * (satisfied_demand))},
                 # Calculate and include the standard deviation of rewards up to the current step
                 'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
         

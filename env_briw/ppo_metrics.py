@@ -10,7 +10,7 @@ from ppo_env import InventoryEnvConfig   # Adjusted import for your environment
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = r'..\rewardshaping\configurations_ppo.xlsx'
+excel_path = r'..\rewardshaping\configurations.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records') # crea un dict con i nomi delle colonne come key e i valori nelle colonne come values
 
