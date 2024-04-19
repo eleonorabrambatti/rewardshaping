@@ -104,7 +104,7 @@ def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes):
 
 
 def save_metrics_to_dataframe(metrics, config_details, avg_reward, std_reward,
-                              filename='BSevaluation_metrics.csv'):
+                              filename='evaluation_metrics_BS.csv'):
     metrics['config_details'] = str(config_details)  # Add configuration details for comparison
     print(f"Average Reward before DataFrame: {metrics['average_reward']}")
     print(f"Reward STD before DataFrame: {metrics['reward_std']}")
@@ -175,4 +175,38 @@ for config_index, config in enumerate(configurations):
             writer.writerow([config_index, component, value])
     
 
+<<<<<<< HEAD
     
+=======
+    
+    # Generate a unique filename suffix from configuration for saving results
+    config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
+    metrics_filename = f'evaluation_metrics_BS.csv'
+    save_metrics_to_dataframe(detailed_metrics, config_details=config_str,
+                              avg_reward=mean_reward, std_reward=std_reward,
+                              filename=metrics_filename)
+    plot_filename = f'reward_convergence_{config_str}.pdf'
+
+    break
+    # Load the logs and save the plot
+    logs_1 = np.load('./logs_1/evaluations.npz')
+    timesteps = logs_1['timesteps']
+    results = logs_1['results']
+    
+    if config_index in indices_to_visualize:
+       # Generate and save the plot only for selected configurations
+       plt.figure(figsize=(10, 6))
+       plt.plot(timesteps, results.mean(axis=1))
+       plt.fill_between(timesteps, results.mean(axis=1) - results.std(axis=1), results.mean(axis=1) + results.std(axis=1), alpha=0.3)
+       plt.xlabel('Timesteps')
+       plt.ylabel('Mean Reward')
+       
+       # Create a more spaced-out title
+       config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
+       plt.title(f'Reward Convergence - Config: {config_str}\n', pad=20)  # Add pad for space
+       
+       plt.grid(True)
+       plot_filename = f'reward_convergence_{config_str}.pdf'
+       plt.savefig(plot_filename, dpi=300)  # Saves the plot with a dynamic name
+       plt.close()  # Close the plot explicitly to free up memory
+>>>>>>> bdbf25b11a3c0bc9446d4596cbddcd0a4ab6a512
