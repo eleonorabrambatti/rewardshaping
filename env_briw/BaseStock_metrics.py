@@ -82,7 +82,7 @@ def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes):
             episode_rewards.append(reward)
             
             # Extract and temporarily store reward components from the info dictionary for this episode
-            for component, value in info['reward_components'].items():
+            for component, value in info['reward_components'].items(): 
                 temp_components[component].append(value)
 
         # Aggregate total rewards for the episode
