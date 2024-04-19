@@ -1,0 +1,2 @@
+config_details,average_reward,reward_std,average price,average holding cost,average demand not satisfied,average perishability cost
+m_4_L_2_p_20_c_0_h_1_b_10_w_3_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,3.8691999999999998,0.589992677920667,473.4,23.35,63.1,0.03

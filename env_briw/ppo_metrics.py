@@ -5,12 +5,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, CallbackList,BaseCallback
-from ppo_env import InventoryEnvGYConfig   # Adjusted import for your environment
+from ppo_env import InventoryEnvConfig   # Adjusted import for your environment
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = r'C:\Users\mprivitera\Documents\GitHub\rewardshaping\ENVIRONMENT_FROM_SCRATCH\configurations.xlsx'
+excel_path = r'..\rewardshaping\configurations_ppo.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records') # crea un dict con i nomi delle colonne come key e i valori nelle colonne come values
 
@@ -116,7 +116,7 @@ class WarmupCallback(BaseCallback):
         return True
 
 
-def save_metrics_to_dataframe(metrics, config_details, avg_reward, avg_price,avg_hc,avg_dns, avg_perish, std_reward, filename='evaluation_metrics.csv'):
+def save_metrics_to_dataframe(metrics, config_details, avg_reward, avg_price,avg_hc,avg_dns, avg_perish, std_reward, filename='evaluation_metrics_ppo.csv'):
     metrics['config_details'] = str(config_details)  # Add configuration details for comparison
     print(f'metrics dictionary: {metrics}')
     metrics['average_reward'] = avg_reward
@@ -170,7 +170,7 @@ learning_rate = 1e-4
 
 # Loop through each configuration
 for config_index, config in enumerate(configurations):
-    env = InventoryEnvGYConfig(config) # Initialize environment with current configuration
+    env = InventoryEnvConfig(config) # Initialize environment with current configuration
     #env.reset()
 
     model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
@@ -196,7 +196,7 @@ for config_index, config in enumerate(configurations):
 
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
-    metrics_filename = f'evaluation_metrics.csv'
+    metrics_filename = f'evaluation_metrics_ppo.csv'
     save_metrics_to_dataframe(detailed_metrics, config_details=config_str, avg_reward=mean_reward, avg_price=mean_price, avg_hc=mean_hc, avg_dns=mean_dns, avg_perish=mean_perish,
                               std_reward=std_reward, filename=metrics_filename)
     plot_filename = f'reward_convergence_{config_str}.pdf'
