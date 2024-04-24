@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from ppo_sb3 import PPO
-from callbacks import EvalCallback, CheckpointCallback, CallbackList, BaseCallback
+from callbacks import EvalCallback, CheckpointCallback, BaseCallback
+from stable_baselines3.common.callbacks import CallbackList
 from ppo_env import InventoryEnvConfig   # Adjusted import for your environment
 
 from timeit import default_timer as timer

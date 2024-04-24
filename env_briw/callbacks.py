@@ -20,7 +20,7 @@ except ImportError:
     tqdm = None
 
 
-from stable_baselines3.common.evaluation import evaluate_policy
+from evaluation import evaluate_policy
 from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv, sync_envs_normalization
 
 if TYPE_CHECKING:
@@ -493,7 +493,7 @@ class EvalCallback(EventCallback):
             mean_ep_length, std_ep_length = np.mean(episode_lengths), np.std(episode_lengths)
             self.last_mean_reward = float(mean_reward)
 
-            if self.verbose >= 1:
+            if self.verbose >= 0:
                 print(f'vediamo se funziona')
                 print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward={mean_reward:.2f} +/- {std_reward:.2f}")
                 print(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
