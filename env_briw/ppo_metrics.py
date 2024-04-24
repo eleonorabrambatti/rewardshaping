@@ -3,14 +3,16 @@ import gym
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, CallbackList,BaseCallback
+from ppo_sb3 import PPO
+from callbacks import EvalCallback, CheckpointCallback, CallbackList, BaseCallback
 from ppo_env import InventoryEnvConfig   # Adjusted import for your environment
+
+from timeit import default_timer as timer
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = r'..\rewardshaping\configurations.xlsx'
+excel_path = r'..\rewardshaping\configurations_ppo.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records') # crea un dict con i nomi delle colonne come key e i valori nelle colonne come values
 
@@ -38,13 +40,13 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
         episode_metrics = {key: [] for key in metrics}
         episode_order_quantities = []  # Store order quantities for this episode
 
-        print(f'obs:{obs}')
+        #print(f'obs:{obs}')
         while not done:
             action, _states = model.predict(obs, deterministic=True)
-            print(f'action:  {action}')
+            #print(f'action:  {action}')
             obs, reward, done, info = env.step(action) # qui una volta calcolato lo step viene registrato in info le order quantity che sarebbe l'azione
             # ho il vettore, soddifso la domanda shifto e arriva l'azione
-            print(f'observation:{obs} and {info}')
+            #print(f'observation:{obs} and {info}')
             episode_rewards += reward
             episode_price += env.price_transformed
             
@@ -53,9 +55,9 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
             episode_demand_not_satisfied_cost+=env.demand_not_satisfied
             episode_perishability+=env.perishability
 
-            print(f'holding_tranformed:{env.holding_transformed}')
-            print(f'demand_not_satisfied:{env.demand_not_satisfied}')
-            print(f'perishability: {env.perishability}')
+            #print(f'holding_tranformed:{env.holding_transformed}')
+            #print(f'demand_not_satisfied:{env.demand_not_satisfied}')
+            #print(f'perishability: {env.perishability}')
             
             # Log the order quantity for this step
             if 'order_quantity' in info:
@@ -88,11 +90,11 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
     avg_perish=np.mean(total_perishability_cost)
     
     # After evaluation, print or analyze order quantities
-    print("Order quantities during evaluation:")
-    for ep_num, quantities in enumerate(order_quantities, start=1):
-        print(f"Episode {ep_num}: {quantities}")
+    #print("Order quantities during evaluation:")
+    #for ep_num, quantities in enumerate(order_quantities, start=1):
+        #print(f"Episode {ep_num}: {quantities}")
     
-    print(f"Average Reward: {avg_reward}, Reward STD: {std_reward}, Average price: {avg_price}, Average holding cost: {avg_hc}. Average demand not satisfied: {avg_dns}, Average perishability cost: {avg_perish}")
+    #print(f"Average Reward: {avg_reward}, Reward STD: {std_reward}, Average price: {avg_price}, Average holding cost: {avg_hc}. Average demand not satisfied: {avg_dns}, Average perishability cost: {avg_perish}")
      
     return avg_reward, avg_price, avg_hc, avg_dns, avg_perish, std_reward, avg_metrics
 
@@ -170,6 +172,7 @@ learning_rate = 1e-4
 
 # Loop through each configuration
 for config_index, config in enumerate(configurations):
+    start = timer()
     env = InventoryEnvConfig(config) # Initialize environment with current configuration
     #env.reset()
 
@@ -222,3 +225,6 @@ for config_index, config in enumerate(configurations):
     plot_filename = f'reward_convergence_{config_str}.pdf'
     plt.savefig(plot_filename, dpi=300)  # Saves the plot with a dynamic name
     plt.close()  # Close the plot explicitly to free up memory
+
+    end = timer()
+    print(end - start) # Time in seconds
