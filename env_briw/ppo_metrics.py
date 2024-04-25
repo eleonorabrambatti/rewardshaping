@@ -7,6 +7,8 @@ from ppo_sb3 import PPO
 from callbacks import EvalCallback, CheckpointCallback, BaseCallback
 from stable_baselines3.common.callbacks import CallbackList
 from ppo_env import InventoryEnvConfig   # Adjusted import for your environment
+from stable_baselines3.common.env_util import make_vec_env
+
 
 from timeit import default_timer as timer
 
@@ -176,9 +178,12 @@ for config_index, config in enumerate(configurations):
     start = timer()
     env = InventoryEnvConfig(config) # Initialize environment with current configuration
     #env.reset()
+    #env = gym.make("InventoryEnvConfig")
+    # Parallel environments
+    #vec_env = make_vec_env(env, n_envs=4)
 
     model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
-                learning_rate=learning_rate, n_steps=4096, batch_size=64,
+                learning_rate=learning_rate, n_steps=5000, batch_size=50,
                 n_epochs=10, clip_range=0.1, gamma=0.99, ent_coef=0.01)
     
     #warmup_callback = WarmupCallback(warmup_steps=10000, start_prob=1.0, end_prob=0.1)

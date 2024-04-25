@@ -6,13 +6,14 @@ import numpy as np
 import torch as th
 from gymnasium import spaces
 
-from stable_baselines3.common.base_class import BaseAlgorithm
+
 from stable_baselines3.common.buffers import DictRolloutBuffer, RolloutBuffer
 from callbacks import BaseCallback
 from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
 from stable_baselines3.common.utils import obs_as_tensor, safe_mean
 from stable_baselines3.common.vec_env import VecEnv
+from base_class import BaseAlgorithm
 
 SelfOnPolicyAlgorithm = TypeVar("SelfOnPolicyAlgorithm", bound="OnPolicyAlgorithm")
 
@@ -169,7 +170,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
         callback.on_rollout_start()
         
         while n_steps < n_rollout_steps:
-            
+            #print(f'n steps: {n_steps}')
             if self.use_sde and self.sde_sample_freq > 0 and n_steps % self.sde_sample_freq == 0:
                 # Sample a new noise matrix
                 self.policy.reset_noise(env.num_envs)
@@ -194,6 +195,10 @@ class OnPolicyAlgorithm(BaseAlgorithm):
                     clipped_actions = np.clip(actions, self.action_space.low, self.action_space.high)
 
             new_obs, rewards, dones, infos = env.step(clipped_actions)
+
+            #new_obs, rewards_bs, dones, infos = env_2.step(base_stock_actions)
+
+            #rewards = rewards_ppo + rewards_bs
 
             self.num_timesteps += env.num_envs
             # Give access to local variables

@@ -367,7 +367,7 @@ class EvalCallback(EventCallback):
         eval_env: Union[gym.Env, VecEnv],
         callback_on_new_best: Optional[BaseCallback] = None,
         callback_after_eval: Optional[BaseCallback] = None,
-        n_eval_episodes: int = 5,
+        n_eval_episodes: int = 6,
         eval_freq: int = 10000,
         log_path: Optional[str] = None,
         best_model_save_path: Optional[str] = None,
@@ -440,9 +440,11 @@ class EvalCallback(EventCallback):
                 self._is_success_buffer.append(maybe_is_success)
 
     def _on_step(self) -> bool:
+        print(f'num timesteps: {self.num_timesteps}')
         continue_training = True
 
         if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
+            
             # Sync training and eval env if there is VecNormalize
             if self.model.get_vec_normalize_env() is not None:
                 try:
@@ -467,7 +469,7 @@ class EvalCallback(EventCallback):
                 warn=self.warn,
                 callback=self._log_success_callback,
             )
-
+            #print(f'episode_rewards: {episode_rewards}')
             if self.log_path is not None:
                 assert isinstance(episode_rewards, list)
                 assert isinstance(episode_lengths, list)
@@ -494,7 +496,7 @@ class EvalCallback(EventCallback):
             self.last_mean_reward = float(mean_reward)
 
             if self.verbose >= 0:
-                print(f'vediamo se funziona')
+                
                 print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward={mean_reward:.2f} +/- {std_reward:.2f}")
                 print(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
             # Add to current Logger
@@ -511,6 +513,7 @@ class EvalCallback(EventCallback):
             self.logger.record("time/total_timesteps", self.num_timesteps, exclude="tensorboard")
             self.logger.dump(self.num_timesteps)
 
+            print(self.num_timesteps)
             if mean_reward > self.best_mean_reward:
                 if self.verbose >= 1:
                     print("New best mean reward!")
