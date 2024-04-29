@@ -8,7 +8,8 @@ from callbacks import EvalCallback, CheckpointCallback, BaseCallback
 from stable_baselines3.common.callbacks import CallbackList
 from ppo_env import InventoryEnvConfig   # Adjusted import for your environment
 from stable_baselines3.common.env_util import make_vec_env
-
+import sys
+sys.path.append('Users\ebrambatti\Documents\GitHub\rewardshaping\env_briw\ppo_env.py')
 
 from timeit import default_timer as timer
 
@@ -18,6 +19,18 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 excel_path = r'..\rewardshaping\configurations_ppo.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records') # crea un dict con i nomi delle colonne come key e i valori nelle colonne come values
+
+gym.envs.register(
+    id='Pippo-v0',
+    entry_point='ppo_env:InventoryEnvConfig',  # Sostituisci 'your_module_name' con il nome del tuo modulo Python
+)
+
+# List all available Gymnasium environments
+env_ids = [env.id for env in gym.envs.registry.all()]
+ 
+print("Available Gymnasium environments:")
+for env_id in env_ids:
+    print(env_id)
 
 
 def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
@@ -172,16 +185,19 @@ policy_kwargs = dict(net_arch=[dict(pi=[32, 32], vf=[32, 32])])
 # In this case, it's specifying a feedforward neural network with two hidden layers for both the policy (pi) 
 # and the value function (vf). Each hidden layer has 32 units. This architecture configuration can be adjusted as needed.
 learning_rate = 1e-4
-
 # Loop through each configuration
 for config_index, config in enumerate(configurations):
     start = timer()
     #env = InventoryEnvConfig(config) # Initialize environment with current configuration
     #env.reset()
-    #env = gym.make("CustomEnv-v0")
+    gym.envs.register(
+    id='Pippo-v0',
+    entry_point='ppo_env:InventoryEnvConfig',  # Sostituisci 'your_module_name' con il nome del tuo modulo Python
+)
+    #env = gym.make('Pippo-v0')
     # Parallel environments
-    env = make_vec_env('Pippo', n_envs=4)
-
+    env = make_vec_env('Pippo-v0', n_envs=4)
+    #env = InventoryEnvConfig(config)
     model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
                 learning_rate=learning_rate, n_steps=5000, batch_size=50,
                 n_epochs=10, clip_range=0.1, gamma=0.99, ent_coef=0.01)

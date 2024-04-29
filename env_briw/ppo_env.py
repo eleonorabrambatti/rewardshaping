@@ -3,7 +3,7 @@ import numpy as np
 from gym import spaces
 
 class InventoryEnvConfig(gym.Env):
-    def __init__(self):
+    def __init__(self, config):
         super(InventoryEnvConfig, self).__init__()
         # Action and observation spaces
         self.action_space = spaces.Discrete(30) # ho 30 possibili azioni tra cui scegliere (da 0 a 29)
