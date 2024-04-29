@@ -3,8 +3,8 @@ import numpy as np
 from gym import spaces
 
 class InventoryEnvConfig(gym.Env):
-    def __init__(self, config):
-        #super(InventoryEnvGYConfig, self).__init__()
+    def __init__(self):
+        super(InventoryEnvConfig, self).__init__()
         # Action and observation spaces
         self.action_space = spaces.Discrete(30) # ho 30 possibili azioni tra cui scegliere (da 0 a 29)
         observation_length = (config['m'] + config['L'] - 1) + 2
@@ -131,3 +131,6 @@ class InventoryEnvConfig(gym.Env):
             print(f"Stock: {self.stock}")
             print(f"Initial Demand: {self.initial_demand}")
             # Include additional print statements as needed for debugging or information purposes.
+
+# Registra l'ambiente personalizzato in Gym
+

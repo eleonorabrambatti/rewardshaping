@@ -176,11 +176,11 @@ learning_rate = 1e-4
 # Loop through each configuration
 for config_index, config in enumerate(configurations):
     start = timer()
-    env = InventoryEnvConfig(config) # Initialize environment with current configuration
+    #env = InventoryEnvConfig(config) # Initialize environment with current configuration
     #env.reset()
-    #env = gym.make("InventoryEnvConfig")
+    #env = gym.make("CustomEnv-v0")
     # Parallel environments
-    #vec_env = make_vec_env(env, n_envs=4)
+    env = make_vec_env('Pippo', n_envs=4)
 
     model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
                 learning_rate=learning_rate, n_steps=5000, batch_size=50,
