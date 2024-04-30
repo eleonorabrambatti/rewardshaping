@@ -9,6 +9,7 @@ from stable_baselines3.common.callbacks import CallbackList
 from ppo_env import InventoryEnvConfig   # Adjusted import for your environment
 from stable_baselines3.common.env_util import make_vec_env
 import sys
+from BaseStock_env import BaseStockConfig
 sys.path.append('Users\ebrambatti\Documents\GitHub\rewardshaping\env_briw\ppo_env.py')
 
 from timeit import default_timer as timer
@@ -19,18 +20,6 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 excel_path = r'..\rewardshaping\configurations_ppo.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records') # crea un dict con i nomi delle colonne come key e i valori nelle colonne come values
-
-gym.envs.register(
-    id='Pippo-v0',
-    entry_point='ppo_env:InventoryEnvConfig',  # Sostituisci 'your_module_name' con il nome del tuo modulo Python
-)
-
-# List all available Gymnasium environments
-env_ids = [env.id for env in gym.envs.registry.all()]
- 
-print("Available Gymnasium environments:")
-for env_id in env_ids:
-    print(env_id)
 
 
 def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
@@ -188,15 +177,12 @@ learning_rate = 1e-4
 # Loop through each configuration
 for config_index, config in enumerate(configurations):
     start = timer()
-    #env = InventoryEnvConfig(config) # Initialize environment with current configuration
+    env = InventoryEnvConfig(config) # Initialize environment with current configuration
     #env.reset()
-    gym.envs.register(
-    id='Pippo-v0',
-    entry_point='ppo_env:InventoryEnvConfig',  # Sostituisci 'your_module_name' con il nome del tuo modulo Python
-)
+    env_2 = BaseStockConfig(config)
     #env = gym.make('Pippo-v0')
     # Parallel environments
-    env = make_vec_env('Pippo-v0', n_envs=4)
+    #env = make_vec_env('Pippo-v0', n_envs=4, config=config)
     #env = InventoryEnvConfig(config)
     model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
                 learning_rate=learning_rate, n_steps=5000, batch_size=50,
@@ -213,7 +199,7 @@ for config_index, config in enumerate(configurations):
 
     # Train the model
     total_timesteps = env.total_timesteps
-    model.learn(total_timesteps=total_timesteps, callback=callback)
+    model.learn(total_timesteps=total_timesteps, callback=callback, env_2=env_2)
 
     # Evaluate the trained model
     mean_reward, mean_price, mean_hc, mean_dns, mean_perish, std_reward, detailed_metrics = evaluate_policy_and_log_detailed_metrics(model,

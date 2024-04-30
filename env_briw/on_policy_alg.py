@@ -14,6 +14,7 @@ from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedul
 from stable_baselines3.common.utils import obs_as_tensor, safe_mean
 from stable_baselines3.common.vec_env import VecEnv
 from base_class import BaseAlgorithm
+from BaseStock_metrics import evaluate_base_stock_performance
 
 SelfOnPolicyAlgorithm = TypeVar("SelfOnPolicyAlgorithm", bound="OnPolicyAlgorithm")
 
@@ -140,6 +141,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
     def collect_rollouts(
         self,
         env: VecEnv,
+        env_2: Any,
         callback: BaseCallback,
         rollout_buffer: RolloutBuffer,
         n_rollout_steps: int,
@@ -196,9 +198,9 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
             new_obs, rewards, dones, infos = env.step(clipped_actions)
 
-            #new_obs, rewards_bs, dones, infos = env_2.step(base_stock_actions)
+            rewards_bs = evaluate_base_stock_performance(env_2, 16, 1000)
 
-            #rewards = rewards_ppo + rewards_bs
+            rewards = rewards - rewards_bs['average_reward']
 
             self.num_timesteps += env.num_envs
             # Give access to local variables
@@ -281,6 +283,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
     def learn(
         self: SelfOnPolicyAlgorithm,
         total_timesteps: int,
+        env_2: Any,
         callback: MaybeCallback = None,
         log_interval: int = 1,
         tb_log_name: str = "OnPolicyAlgorithm",
@@ -293,7 +296,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
             callback,
             reset_num_timesteps,
             tb_log_name,
-            progress_bar,
+            progress_bar
         )
         
         callback.on_training_start(locals(), globals())
@@ -302,7 +305,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
         while self.num_timesteps < total_timesteps:
             print(f'sono nel while')
-            continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
+            continue_training = self.collect_rollouts(self.env, env_2, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
 
             if not continue_training:
                 break

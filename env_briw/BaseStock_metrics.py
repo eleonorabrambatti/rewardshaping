@@ -128,7 +128,7 @@ def save_metrics_to_dataframe(metrics, config_details, avg_reward, std_reward,
             df.to_csv(filename, mode='a', header=False, index=False)
  
  
- 
+"""  
 total_configs = len(configurations)
 # Calculate indices for the configurations to visualize
 indices_to_visualize = []
@@ -184,4 +184,4 @@ with open('evaluation_metrics_BS.csv', mode='w', newline='') as file:
                          'average_reward': reward_components_summary['average_reward'],
                          'stdv_reward': reward_components_summary['stdv_reward']})
         end = timer()
-        print(end - start) # Time in seconds
+        print(end - start) # Time in seconds """

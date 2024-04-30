@@ -134,3 +134,8 @@ class InventoryEnvConfig(gym.Env):
 
 # Registra l'ambiente personalizzato in Gym
 
+gym.envs.register(
+    id='Pippo-v0',
+    entry_point='ppo_env:InventoryEnvConfig',  # Sostituisci 'your_module_name' con il nome del tuo modulo Python
+)
+
