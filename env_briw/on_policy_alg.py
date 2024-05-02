@@ -198,9 +198,9 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
             new_obs, rewards, dones, infos = env.step(clipped_actions)
 
-            rewards_bs = evaluate_base_stock_performance(env_2, 16, 1000)
+            #rewards_bs = evaluate_base_stock_performance(env_2, 16, 1000)
 
-            rewards = rewards - rewards_bs['average_reward']
+            #rewards = rewards - rewards_bs['average_reward']
 
             self.num_timesteps += env.num_envs
             # Give access to local variables
