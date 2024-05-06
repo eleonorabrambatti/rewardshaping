@@ -16,8 +16,10 @@ from timeit import default_timer as timer
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
+evaluations_bs = pd.read_excel('evaluation_metrics_BS.xlsx')
+
 # Load configurations from an Excel file
-excel_path = r'..\rewardshaping\configurations_ppo.xlsx'
+excel_path = r'..\rewardshaping\configurations_96.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records') # crea un dict con i nomi delle colonne come key e i valori nelle colonne come values
 
@@ -175,10 +177,13 @@ policy_kwargs = dict(net_arch=[dict(pi=[32, 32], vf=[32, 32])])
 # and the value function (vf). Each hidden layer has 32 units. This architecture configuration can be adjusted as needed.
 learning_rate = 1e-4
 # Loop through each configuration
-for config_index, config in enumerate(configurations):
+for config_index, config in enumerate(configurations, start=4):
+    if config_index >= 12:
+        break
     start = timer()
     env = InventoryEnvConfig(config) # Initialize environment with current configuration
     #env.reset()
+    rewards_bs = evaluations_bs['average_reward'][config_index]
     env_2 = BaseStockConfig(config)
     #env = gym.make('Pippo-v0')
     # Parallel environments
@@ -199,7 +204,8 @@ for config_index, config in enumerate(configurations):
 
     # Train the model
     total_timesteps = env.total_timesteps
-    model.learn(total_timesteps=total_timesteps, callback=callback, env_2=env_2)
+    #model.learn(total_timesteps=total_timesteps, callback=callback, env_2=env_2)
+    model.learn(total_timesteps=total_timesteps, callback=callback, rewards_bs=rewards_bs)
 
     # Evaluate the trained model
     mean_reward, mean_price, mean_hc, mean_dns, mean_perish, std_reward, detailed_metrics = evaluate_policy_and_log_detailed_metrics(model,
