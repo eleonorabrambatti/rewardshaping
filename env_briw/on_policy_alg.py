@@ -143,7 +143,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
         self,
         env: VecEnv,
         #env_2: Any,
-        rewards_bs:float,
+        object_bs:float,
         callback: BaseCallback,
         rollout_buffer: RolloutBuffer,
         n_rollout_steps: int,
@@ -173,6 +173,8 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
         callback.on_rollout_start()
         
+        prev_val=0
+
         while n_steps < n_rollout_steps:
             #print(f'n steps: {n_steps}')
             if self.use_sde and self.sde_sample_freq > 0 and n_steps % self.sde_sample_freq == 0:
@@ -202,9 +204,11 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
             #rewards_bs = evaluate_base_stock_performance(env_2, 16, 1000)
             
-            print(f'reward ppo: {rewards}, reward bs: {rewards_bs}')
-
-            rewards = rewards - rewards_bs
+            print(f'reward ppo: {rewards}, reward bs: {object_bs}')
+            cur_val = -50 * abs(rewards - object_bs)
+            F = cur_val - ((1/0.99)*prev_val)
+            prev_val = cur_val
+            rewards = rewards + F
             print(f'final reward: {rewards}')
 
             self.num_timesteps += env.num_envs
@@ -289,7 +293,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
         self: SelfOnPolicyAlgorithm,
         total_timesteps: int,
         #env_2: Any,
-        rewards_bs=float,
+        object_bs=float,
         callback: MaybeCallback = None,
         log_interval: int = 1,
         tb_log_name: str = "OnPolicyAlgorithm",
@@ -311,7 +315,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
         while self.num_timesteps < total_timesteps:
             print(f'sono nel while')
-            continue_training = self.collect_rollouts(self.env, rewards_bs, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
+            continue_training = self.collect_rollouts(self.env, object_bs, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
 
             if not continue_training:
                 break

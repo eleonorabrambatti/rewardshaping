@@ -26,6 +26,7 @@ class BaseStockConfig(gym.Env):
         self.shape = 1 / (self.coef_of_var ** 2)
         self.scale = self.mean_demand / self.shape
         self.base_stock_level = None
+        self.done = config['done']
         # Ensure all other necessary initializations are performed here
         self.reset()
  
@@ -154,14 +155,16 @@ class BaseStockConfig(gym.Env):
                 'holding_cost':self.h *(total_stock),
                 'lost_sales_cost': self.b * lost_sales,
                 'expired_stock_cost': self.w * (expired),
-                'Satisfied demand':(self.p * (satisfied_demand))},
+                'Satisfied demand':(self.p * (satisfied_demand)),
+                'best_base_stock':self.base_stock_level,
+                'action':order_quantity},
                 # Calculate and include the standard deviation of rewards up to the current step
                 'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
        
                 }
         #print(info)
         self.current_step += 1
-        done = self.current_step >= 10 # End episode after 10 steps or define your own condition
+        done = self.current_step >= self.done # End episode after 10 steps or define your own condition
         if done:
              self.current_step = 0
         return self._next_observation(), reward, done, info

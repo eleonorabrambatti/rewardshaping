@@ -14,7 +14,7 @@ import csv
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
  
 # Load configurations from an Excel file
-excel_path = r'..\rewardshaping\configurations.xlsx'
+excel_path = r'..\rewardshaping\configurations_prove.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records')
 def optimize_base_stock(env, min_base_stock, max_base_stock, num_episodes_per_level):
@@ -64,7 +64,9 @@ def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes):
         'lost_sales_cost': [],
         'expired_stock_cost': [],
         'ordering_cost': [],
-        'Satisfied demand': []
+        'Satisfied demand': [],
+        'best_base_stock' : [],
+        'action' : []
     }
    
     # Initialize storage for sum of reward components per episode
@@ -73,7 +75,9 @@ def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes):
         'lost_sales_cost': [],
         'expired_stock_cost': [],
         'ordering_cost': [],
-        'Satisfied demand': []
+        'Satisfied demand': [],
+        'best_base_stock' : [],
+        'action' : []
     }
    
     for _ in range(n_eval_episodes):
@@ -101,7 +105,8 @@ def evaluate_base_stock_performance(env, base_stock_level, n_eval_episodes):
     # Compute average of the components sums and total rewards over all episodes
     for component in reward_components_summary.keys():
         reward_components_summary[component] = np.mean(episode_components_sum[component])
- 
+    reward_components_summary['action'] = round(float(reward_components_summary['action']/env.done))
+    reward_components_summary['best_base_stock'] = int(reward_components_summary['best_base_stock']/env.done)
     reward_components_summary['average_reward'] = np.mean(total_rewards)
     reward_components_summary['stdv_reward'] = np.std(total_rewards)
  
@@ -128,7 +133,6 @@ def save_metrics_to_dataframe(metrics, config_details, avg_reward, std_reward,
             df.to_csv(filename, mode='a', header=False, index=False)
  
  
-"""  
 total_configs = len(configurations)
 # Calculate indices for the configurations to visualize
 indices_to_visualize = []
@@ -150,7 +154,7 @@ if total_configs > 2:
 with open('evaluation_metrics_BS.csv', mode='w', newline='') as file:
  
     # Define fieldnames based on dictionary keys
-    fieldnames = ['Configuration', 'holding_cost', 'lost_sales_cost', 'expired_stock_cost', 'ordering_cost', 'Satisfied demand', 'average_reward', 'stdv_reward']
+    fieldnames = ['Configuration', 'holding_cost', 'lost_sales_cost', 'expired_stock_cost', 'ordering_cost', 'Satisfied demand', 'average_reward', 'stdv_reward','best_base_stock','action', 'time']
    
     # Create a CSV writer object
     writer = csv.DictWriter(file, fieldnames=fieldnames)
@@ -166,14 +170,14 @@ with open('evaluation_metrics_BS.csv', mode='w', newline='') as file:
         env = BaseStockConfig(config)  # Initialize environment with current configuration
         env.seed(42)
  
-        optimal_base_stock, optimal_reward = optimize_base_stock(env, 0, 50, 1000)
+        optimal_base_stock, optimal_reward = optimize_base_stock(env, 0, 10, 100)
         #print(f"Optimal Base Stock Level: {optimal_base_stock}, with an average reward of: {optimal_reward}")
         env.reset()
  
         # Evaluate the trained model
         reward_components_summary = evaluate_base_stock_performance(env, optimal_base_stock, n_eval_episodes=100)
         #print(f"Reward_components_summary: {reward_components_summary}")
- 
+        end = timer()
         # Write data to CSV file for current iteration
         writer.writerow({'Configuration': config_index,
                          'holding_cost': reward_components_summary['holding_cost'],
@@ -182,6 +186,9 @@ with open('evaluation_metrics_BS.csv', mode='w', newline='') as file:
                          'ordering_cost': reward_components_summary['ordering_cost'],
                          'Satisfied demand': reward_components_summary['Satisfied demand'],
                          'average_reward': reward_components_summary['average_reward'],
-                         'stdv_reward': reward_components_summary['stdv_reward']})
-        end = timer()
-        print(end - start) # Time in seconds """
+                         'stdv_reward': reward_components_summary['stdv_reward'],
+                         'best_base_stock' : reward_components_summary['best_base_stock'],
+                         'action' : reward_components_summary['action'],
+                         'time' : end - start})
+        
+        print(end - start) # Time in seconds

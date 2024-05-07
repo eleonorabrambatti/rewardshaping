@@ -1,0 +1,2 @@
+Configuration,holding_cost,lost_sales_cost,expired_stock_cost,ordering_cost,Satisfied demand,average_reward,stdv_reward,best_base_stock,action,time
+0,19.49,70.9,0.28,0.0,0.0,-0.9067000000000002,0.17050545445820786,10,3,6.194205899722874

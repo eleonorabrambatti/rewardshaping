@@ -1,13 +1,4 @@
 config_details,average_reward,reward_std,average price,average holding cost,average demand not satisfied,average perishability cost
-m_4_L_2_p_0_c_0_h_1_b_10_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-0.8069000000000003,0.16660549210635286,0.0,12.89,67.8,0.0
-m_4_L_2_p_0_c_0_h_1_b_100_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-6.4138,1.3580307654836101,0.0,37.3,604.0,0.08
-m_4_L_2_p_0_c_0_h_1_b_1000_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-64.7266,13.418588988414541,0.0,355.36,6000.0,117.3
-m_4_L_2_p_0_c_0_h_1_b_10000_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-605.4309000000001,134.18095759156736,0.0,385.39,60000.0,157.7
-m_4_L_2_p_0_c_0_h_1_b_10_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-0.8167000000000003,0.16102207923138992,0.0,16.87,64.8,0.0
-m_4_L_2_p_0_c_0_h_1_b_100_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-6.493199999999998,1.389953869738129,0.0,46.96,602.0,0.36
-m_4_L_2_p_0_c_0_h_1_b_1000_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-68.7984,13.834816566908287,0.0,656.54,6000.0,223.3
-m_4_L_2_p_0_c_0_h_1_b_10000_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-603.5099,134.2969077864044,0.0,273.09,60000.0,77.9
-m_4_L_2_p_0_c_0_h_1_b_10_w_4_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-0.8097000000000004,0.15719068038532058,0.0,15.47,65.5,0.0
-m_4_L_2_p_0_c_0_h_1_b_100_w_4_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-6.4478,1.3816899652237478,0.0,42.54,602.0,0.24
-m_4_L_2_p_0_c_0_h_1_b_1000_w_4_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-62.2482,13.38976387991962,0.0,161.98,6000.0,62.84
-m_4_L_2_p_0_c_0_h_1_b_10000_w_4_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-609.6396000000001,134.16857786322402,0.0,581.36,60000.0,382.6
+m_4_L_2_p_0_c_0_h_1_b_10_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-5.7424,0.1799562168973331,0.0,396.94,60.0,117.3
+m_4_L_2_p_0_c_0_h_1_b_100_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-15.406600000000003,1.3480098070859865,0.0,703.36,600.0,237.3
+m_4_L_2_p_0_c_0_h_1_b_1000_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_200000_num_episodes_1000_done_10,-67.4572,13.366329719111377,0.0,567.4,6000.0,178.32
