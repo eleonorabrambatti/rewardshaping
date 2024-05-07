@@ -6,7 +6,7 @@ class InventoryEnvConfig(gym.Env):
     def __init__(self, config):
         super(InventoryEnvConfig, self).__init__()
         # Action and observation spaces
-        self.action_space = spaces.Discrete(30) # ho 30 possibili azioni tra cui scegliere (da 0 a 29)
+        self.action_space = spaces.Discrete(10) # ho 30 possibili azioni tra cui scegliere (da 0 a 29)
         observation_length = (config['m'] + config['L'] - 1) + 2
         self.observation_space = spaces.Box(low=0, high=100, shape=(observation_length,), dtype=np.float32)
         # all'interno della box c'è un vettore di dimensioni observation_length
@@ -35,6 +35,8 @@ class InventoryEnvConfig(gym.Env):
         self.coef_of_var = config['coef_of_var']
         self.shape = 1 / (self.coef_of_var ** 2)
         self.scale = self.mean_demand / self.shape
+
+        self.base_stock =config['best_base_stock']
         
         #seeds
         self.seed(42)
@@ -60,7 +62,9 @@ class InventoryEnvConfig(gym.Env):
 
     def seed(self, seed=None):
         np.random.seed(42)
-        
+
+    def calculate_base_stock_action(self):
+        return max(0, self.base_stock - self.total_stock) #l 'azioe che voglio e' quella per ripristinare lo stock in base stock fissato quindi devo agire ordinando la differenz
     
     def step(self, action):
         order_quantity=action
@@ -80,20 +84,20 @@ class InventoryEnvConfig(gym.Env):
         lost_sales = max(0, demand)
         expired = self.stock[0] 
         satisfied_demand=(self.initial_demand - lost_sales)
-        total_stock = np.sum(self.stock[:self.m])  # Sum only the first m elements
+        self.total_stock = np.sum(self.stock[:self.m])  # Sum only the first m elements
         reward = (self.p * (satisfied_demand)
-                  - self.c * order_quantity - self.h * (total_stock)
+                  - self.c * order_quantity - self.h * (self.total_stock)
                   - self.b * lost_sales
                   - self.w * (expired))
         reward /= 100.0  # Divide the reward by 100
         self.rewards_history.append(reward)  # Track the reward for each step
-        self.total_stock=total_stock
+        self.total_stock=self.total_stock
 
         # Update stock for the next period
         self.stock = np.roll(self.stock, -1)
         self.stock[-1] = order_quantity  # Add new order at the end
         self.price_transformed=(self.p * (self.initial_demand - lost_sales))
-        self.holding_transformed=(self.h * (total_stock))
+        self.holding_transformed=(self.h * (self.total_stock))
         self.demand_not_satisfied=(self.b * lost_sales)
         self.perishability=(self.w * (expired))
         
@@ -107,7 +111,8 @@ class InventoryEnvConfig(gym.Env):
             'satisfied': satisfied_demand,
             'reward': reward,
             'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0,
-            'order_quantity': order_quantity # Include order_quantity here,
+            'order_quantity': order_quantity, # Include order_quantity here,
+            'base_stock_action': max(0, self.base_stock - self.total_stock)
             }
         
         

@@ -9,6 +9,11 @@ from stable_baselines3.common.callbacks import CallbackList
 from ppo_env import InventoryEnvConfig   # Adjusted import for your environment
 from stable_baselines3.common.env_util import make_vec_env
 import sys
+
+
+import logging
+logging.basicConfig(level=logging.INFO)
+
 from BaseStock_env import BaseStockConfig
 sys.path.append('Users\ebrambatti\Documents\GitHub\rewardshaping\env_briw\ppo_env.py')
 
@@ -47,13 +52,13 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
         episode_metrics = {key: [] for key in metrics}
         episode_order_quantities = []  # Store order quantities for this episode
 
-        #print(f'obs:{obs}')
+        #logging.debug(f'obs:{obs}')
         while not done:
             action, _states = model.predict(obs, deterministic=True)
-            #print(f'action:  {action}')
+            #logging.debug(f'action:  {action}')
             obs, reward, done, info = env.step(action) # qui una volta calcolato lo step viene registrato in info le order quantity che sarebbe l'azione
             # ho il vettore, soddifso la domanda shifto e arriva l'azione
-            #print(f'observation:{obs} and {info}')
+            #logging.debug(f'observation:{obs} and {info}')
             episode_rewards += reward
             episode_price += env.price_transformed
             
@@ -62,9 +67,9 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
             episode_demand_not_satisfied_cost+=env.demand_not_satisfied
             episode_perishability+=env.perishability
 
-            #print(f'holding_tranformed:{env.holding_transformed}')
-            #print(f'demand_not_satisfied:{env.demand_not_satisfied}')
-            #print(f'perishability: {env.perishability}')
+            #logging.debug(f'holding_tranformed:{env.holding_transformed}')
+            #logging.debug(f'demand_not_satisfied:{env.demand_not_satisfied}')
+            #logging.debug(f'perishability: {env.perishability}')
             
             # Log the order quantity for this step
             if 'order_quantity' in info:
@@ -97,11 +102,11 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
     avg_perish=np.mean(total_perishability_cost)
     
     # After evaluation, print or analyze order quantities
-    #print("Order quantities during evaluation:")
+    #logging.debug("Order quantities during evaluation:")
     #for ep_num, quantities in enumerate(order_quantities, start=1):
-        #print(f"Episode {ep_num}: {quantities}")
+        #logging.debug(f"Episode {ep_num}: {quantities}")
     
-    #print(f"Average Reward: {avg_reward}, Reward STD: {std_reward}, Average price: {avg_price}, Average holding cost: {avg_hc}. Average demand not satisfied: {avg_dns}, Average perishability cost: {avg_perish}")
+    #logging.debug(f"Average Reward: {avg_reward}, Reward STD: {std_reward}, Average price: {avg_price}, Average holding cost: {avg_hc}. Average demand not satisfied: {avg_dns}, Average perishability cost: {avg_perish}")
      
     return avg_reward, avg_price, avg_hc, avg_dns, avg_perish, std_reward, avg_metrics
 
@@ -127,19 +132,19 @@ class WarmupCallback(BaseCallback):
 
 def save_metrics_to_dataframe(metrics, config_details, avg_reward, avg_price,avg_hc,avg_dns, avg_perish, std_reward, filename='evaluation_metrics_ppo.csv'):
     metrics['config_details'] = str(config_details)  # Add configuration details for comparison
-    print(f'metrics dictionary: {metrics}')
+    logging.debug(f'metrics dictionary: {metrics}')
     metrics['average_reward'] = avg_reward
     metrics['reward_std'] = std_reward
     metrics['average price']= avg_price
     metrics['average holding cost']= avg_hc
     metrics['average demand not satisfied']= avg_dns
     metrics['average perishability cost']=avg_perish
-    print(f"Average Reward before DataFrame: {metrics['average_reward']}")
-    print(f"Reward STD before DataFrame: {metrics['reward_std']}")
+    logging.debug(f"Average Reward before DataFrame: {metrics['average_reward']}")
+    logging.debug(f"Reward STD before DataFrame: {metrics['reward_std']}")
     
     
     df = pd.DataFrame([metrics])
-    print(df[['average_reward', 'reward_std','average price','average holding cost', 'average demand not satisfied', 'average perishability cost']])
+    logging.debug(df[['average_reward', 'reward_std','average price','average holding cost', 'average demand not satisfied', 'average perishability cost']])
    
    
     
@@ -177,14 +182,12 @@ policy_kwargs = dict(net_arch=[dict(pi=[32, 32], vf=[32, 32])])
 # and the value function (vf). Each hidden layer has 32 units. This architecture configuration can be adjusted as needed.
 learning_rate = 1e-4
 # Loop through each configuration
-for config_index, config in enumerate(configurations, start=4):
-    if config_index >= 12:
-        break
+for config_index, config in enumerate(configurations):
     start = timer()
     env = InventoryEnvConfig(config) # Initialize environment with current configuration
     #env.reset()
-    object_bs = evaluations_bs['average_reward'][config_index]
-    #object_bs = evaluations_bs['action'][config_index]
+    #object_bs = evaluations_bs['average_reward'][config_index]
+    object_bs = evaluations_bs['action'][config_index]
     env_2 = BaseStockConfig(config)
     #env = gym.make('Pippo-v0')
     # Parallel environments
@@ -242,4 +245,4 @@ for config_index, config in enumerate(configurations, start=4):
     plt.close()  # Close the plot explicitly to free up memory
 
     end = timer()
-    print(end - start) # Time in seconds
+    logging.debug(end - start) # Time in seconds

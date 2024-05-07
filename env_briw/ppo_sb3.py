@@ -12,6 +12,9 @@ from stable_baselines3.common.policies import ActorCriticCnnPolicy, ActorCriticP
 from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
 from stable_baselines3.common.utils import explained_variance, get_schedule_fn
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 SelfPPO = TypeVar("SelfPPO", bound="PPO")
 
 
@@ -182,7 +185,7 @@ class PPO(OnPolicyAlgorithm):
             self.clip_range_vf = get_schedule_fn(self.clip_range_vf)
 
     def train(self) -> None:
-        print(f'entro nel train')
+        #print(f'entro nel train')
         """
         Update policy using the currently gathered rollout buffer.
         """
@@ -203,10 +206,10 @@ class PPO(OnPolicyAlgorithm):
         continue_training = True
         # train for n_epochs epochs
         for epoch in range(self.n_epochs):
-            print(f'epoca: {epoch}')
+            logging.debug(f'epoca: {epoch}')
             approx_kl_divs = []
             # Do a complete pass on the rollout buffer
-            print(f'rollout_buffer: {self.rollout_buffer._get_samples(0)}')
+            logging.debug(f'rollout_buffer: {self.rollout_buffer._get_samples(0)}')
             for rollout_data in self.rollout_buffer.get(self.batch_size):
                 actions = rollout_data.actions
                 if isinstance(self.action_space, spaces.Discrete):
@@ -320,7 +323,7 @@ class PPO(OnPolicyAlgorithm):
         reset_num_timesteps: bool = True,
         progress_bar: bool = False,
     ) -> SelfPPO:
-        print(f'sono qui')
+        #print(f'sono qui')
         return super().learn(
             total_timesteps=total_timesteps,
             callback=callback,

@@ -170,7 +170,7 @@ with open('evaluation_metrics_BS.csv', mode='w', newline='') as file:
         env = BaseStockConfig(config)  # Initialize environment with current configuration
         env.seed(42)
  
-        optimal_base_stock, optimal_reward = optimize_base_stock(env, 0, 10, 100)
+        optimal_base_stock, optimal_reward = optimize_base_stock(env, 5, 20, 1000)
         #print(f"Optimal Base Stock Level: {optimal_base_stock}, with an average reward of: {optimal_reward}")
         env.reset()
  

@@ -17,6 +17,9 @@ from stable_baselines3.common.vec_env import VecEnv
 from base_class import BaseAlgorithm
 #from BaseStock_metrics import evaluate_base_stock_performance
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 SelfOnPolicyAlgorithm = TypeVar("SelfOnPolicyAlgorithm", bound="OnPolicyAlgorithm")
 
 
@@ -203,13 +206,15 @@ class OnPolicyAlgorithm(BaseAlgorithm):
             new_obs, rewards, dones, infos = env.step(clipped_actions)
 
             #rewards_bs = evaluate_base_stock_performance(env_2, 16, 1000)
+
+            base_stock_action = infos[0]['base_stock_action']
             
-            print(f'reward ppo: {rewards}, reward bs: {object_bs}')
-            cur_val = -50 * abs(rewards - object_bs)
+            #print(f'action ppo: {clipped_actions}, action bs: {base_stock_action}')
+            cur_val = -50 * abs(clipped_actions - base_stock_action)
             F = cur_val - ((1/0.99)*prev_val)
             prev_val = cur_val
             rewards = rewards + F
-            print(f'final reward: {rewards}')
+            #print(f'final reward: {rewards}')
 
             self.num_timesteps += env.num_envs
             # Give access to local variables
@@ -314,7 +319,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
         assert self.env is not None
 
         while self.num_timesteps < total_timesteps:
-            print(f'sono nel while')
+            #print(f'sono nel while')
             continue_training = self.collect_rollouts(self.env, object_bs, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
 
             if not continue_training:
@@ -325,7 +330,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
             # Display training infos
             if log_interval is not None and iteration % log_interval == 0:
-                print(f'sono dentro if')
+                #print(f'sono dentro if')
                 assert self.ep_info_buffer is not None
                 self._dump_logs(iteration)
 

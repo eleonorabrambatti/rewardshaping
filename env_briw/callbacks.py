@@ -6,6 +6,9 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 import gymnasium as gym
 import numpy as np
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 from stable_baselines3.common.logger import Logger
 
 try:
@@ -440,7 +443,7 @@ class EvalCallback(EventCallback):
                 self._is_success_buffer.append(maybe_is_success)
 
     def _on_step(self) -> bool:
-        print(f'num timesteps: {self.num_timesteps}')
+        #print(f'num timesteps: {self.num_timesteps}')
         continue_training = True
 
         if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
@@ -497,8 +500,8 @@ class EvalCallback(EventCallback):
 
             if self.verbose >= 0:
                 
-                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward={mean_reward:.2f} +/- {std_reward:.2f}")
-                print(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
+                logging.debug(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward={mean_reward:.2f} +/- {std_reward:.2f}")
+                logging.debug(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
             # Add to current Logger
             self.logger.record("eval/mean_reward", float(mean_reward))
             self.logger.record("eval/mean_ep_length", mean_ep_length)
