@@ -6,7 +6,7 @@ class InventoryEnvConfig(gym.Env):
     def __init__(self, config):
         super(InventoryEnvConfig, self).__init__()
         # Action and observation spaces
-        self.action_space = spaces.Discrete(10) # ho 30 possibili azioni tra cui scegliere (da 0 a 29)
+        self.action_space = spaces.Discrete(9) # ho 9 possibili azioni tra cui scegliere (da 0 a 8)
         observation_length = (config['m'] + config['L'] - 1) + 2
         self.observation_space = spaces.Box(low=0, high=100, shape=(observation_length,), dtype=np.float32)
         # all'interno della box c'è un vettore di dimensioni observation_length
@@ -91,6 +91,7 @@ class InventoryEnvConfig(gym.Env):
                   - self.w * (expired))
         reward /= 100.0  # Divide the reward by 100
         self.rewards_history.append(reward)  # Track the reward for each step
+        
         self.total_stock=self.total_stock
 
         # Update stock for the next period

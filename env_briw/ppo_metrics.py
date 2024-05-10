@@ -186,8 +186,8 @@ for config_index, config in enumerate(configurations):
     start = timer()
     env = InventoryEnvConfig(config) # Initialize environment with current configuration
     #env.reset()
-    #object_bs = evaluations_bs['average_reward'][config_index]
-    object_bs = evaluations_bs['action'][config_index]
+    object_bs = evaluations_bs['average_reward'][config_index]
+    #object_bs = evaluations_bs['action'][config_index]
     env_2 = BaseStockConfig(config)
     #env = gym.make('Pippo-v0')
     # Parallel environments

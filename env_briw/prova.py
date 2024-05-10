@@ -9,15 +9,14 @@ from ppo_sb3 import PPO   # Adjusted import for your environment
 
 import gym
 import gymnasium
+shape =float( 1 / (0.38 ** 2))
+scale= float(3 / shape)
  
-gym.envs.register(
-    id='Pippo-v0',
-    entry_point='ppo_env:InventoryEnvConfig',  # Sostituisci 'your_module_name' con il nome del tuo modulo Python
-)
+# Set seed for reproducibility
+np.random.seed(42)
 
-# List all available Gymnasium environments
-env_ids = [env.id for env in gym.envs.registry.all()]
- 
-print("Available Gymnasium environments:")
-for env_id in env_ids:
-    print(env_id)
+# Generate 10,000 values from gamma distribution and find the maximum
+samples = np.random.gamma(shape, scale, 10000)
+print(f'samples: {samples}')
+max_demand = np.max(samples)
+print(f'max_demand: {round(max_demand)}')

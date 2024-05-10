@@ -177,7 +177,10 @@ class OnPolicyAlgorithm(BaseAlgorithm):
         callback.on_rollout_start()
         
         prev_val=0
-
+        reward_averages = []
+        reward_accumulator = 0
+        num_accumulated_steps = 0
+        F=0
         while n_steps < n_rollout_steps:
             #print(f'n steps: {n_steps}')
             if self.use_sde and self.sde_sample_freq > 0 and n_steps % self.sde_sample_freq == 0:
@@ -207,21 +210,26 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
             #rewards_bs = evaluate_base_stock_performance(env_2, 16, 1000)
 
-            base_stock_action = infos[0]['base_stock_action']
+            #base_stock_action = infos[0]['base_stock_action']
             
             #print(f'action ppo: {clipped_actions}, action bs: {base_stock_action}')
-            cur_val = -50 * abs(clipped_actions - base_stock_action)
-            F = cur_val - ((1/0.99)*prev_val)
-            prev_val = cur_val
-            rewards = rewards + F
-            #print(f'final reward: {rewards}')
+            
+            reward_accumulator += np.sum(rewards)
+            if num_accumulated_steps % 10 == 0 and num_accumulated_steps > 0:
+                avg_reward = reward_accumulator / 10
+                cur_val = -50 * abs(avg_reward - object_bs)
+                F = cur_val - ((1/0.99) * prev_val)
+                prev_val = cur_val
+                reward_accumulator = 0
+                num_accumulated_steps = 0    
+            rewards += F
+                #rewards=rewards_10
 
+            num_accumulated_steps += env.num_envs
             self.num_timesteps += env.num_envs
-            # Give access to local variables
             callback.update_locals(locals())
             if not callback.on_step():
                 return False
-            
             self._update_info_buffer(infos, dones)
             n_steps += 1
 
