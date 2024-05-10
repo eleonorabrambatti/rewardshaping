@@ -169,7 +169,10 @@ class OnPolicyAlgorithm(BaseAlgorithm):
         self.policy.set_training_mode(False)
 
         n_steps = 0
+        count=0
         rollout_buffer.reset()
+        count+=1
+
         # Sample new weights for the state dependent exploration
         if self.use_sde:
             self.policy.reset_noise(env.num_envs)
@@ -182,7 +185,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
         num_accumulated_steps = 0
         F=0
         while n_steps < n_rollout_steps:
-            #print(f'n steps: {n_steps}')
+            print(f'n steps: {n_steps}')
             if self.use_sde and self.sde_sample_freq > 0 and n_steps % self.sde_sample_freq == 0:
                 # Sample a new noise matrix
                 self.policy.reset_noise(env.num_envs)
