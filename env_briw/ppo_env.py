@@ -22,6 +22,7 @@ class InventoryEnvConfig(gym.Env):
         self.demand_not_satisfied=0
         self.perishability=0
         self.total_stock=0
+        #self.steps_since_update = 0
         self.c = config['c']
         self.h = config['h']
         self.b = config['b']
@@ -47,6 +48,7 @@ class InventoryEnvConfig(gym.Env):
 
     def reset(self):
         self.stock = np.zeros(self.m + self.L - 1)
+        self.stock_bs = np.zeros(self.m + self.L - 1)
         self.current_step = 0
         self.initial_demand = 0  # Initialize demands for observation
         self.rewards_history = []  # Clear rewards history for the new episode
@@ -79,12 +81,20 @@ class InventoryEnvConfig(gym.Env):
                 taken = min(self.stock[i], demand)
                 self.stock[i] -= taken
                 demand -= taken
+        # Satisfy demand
+        for i in range(min(len(self.stock_bs), self.m)):
+            if demand > 0:
+                taken = min(self.stock_bs[i], demand)
+                self.stock_bs[i] -= taken
+                demand -= taken
                 
         # Calculate rewards and metrics
         lost_sales = max(0, demand)
         expired = self.stock[0] 
+
         satisfied_demand=(self.initial_demand - lost_sales)
         self.total_stock = np.sum(self.stock[:self.m])  # Sum only the first m elements
+        self.total_stock_bs = np.sum(self.stock_bs[:self.m])  # Sum only the first m elements
         reward = (self.p * (satisfied_demand)
                   - self.c * order_quantity - self.h * (self.total_stock)
                   - self.b * lost_sales
@@ -96,11 +106,15 @@ class InventoryEnvConfig(gym.Env):
 
         # Update stock for the next period
         self.stock = np.roll(self.stock, -1)
+        self.stock_bs = np.roll(self.stock_bs, -1)
         self.stock[-1] = order_quantity  # Add new order at the end
+        self.stock_bs[-1] =max(0, self.base_stock - self.total_stock)  # Add new order at the end
         self.price_transformed=(self.p * (self.initial_demand - lost_sales))
         self.holding_transformed=(self.h * (self.total_stock))
         self.demand_not_satisfied=(self.b * lost_sales)
-        self.perishability=(self.w * (expired))
+        self.perishability=(self.w * (expired))#
+
+        
         
  
         
@@ -113,7 +127,8 @@ class InventoryEnvConfig(gym.Env):
             'reward': reward,
             'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0,
             'order_quantity': order_quantity, # Include order_quantity here,
-            'base_stock_action': max(0, self.base_stock - self.total_stock)
+            'base_stock_action': max(0, self.base_stock - self.total_stock),
+            'stock_bs': np.sum(self.stock_bs[-self.m:])
             }
         
         

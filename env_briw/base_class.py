@@ -134,6 +134,7 @@ class BaseAlgorithm(ABC):
         self.num_timesteps = 0
         # Used for updating schedules
         self._total_timesteps = 0
+        self.steps_since_update = 0
         # Used for computing fps, it is updated at each call of learn()
         self._num_timesteps_at_start = 0
         self.seed = seed
