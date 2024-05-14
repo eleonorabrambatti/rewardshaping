@@ -6,7 +6,7 @@ class InventoryEnvConfig(gym.Env):
     def __init__(self, config):
         super(InventoryEnvConfig, self).__init__()
         # Action and observation spaces
-        self.action_space = spaces.Box(low=0, high=9,shape=(1,),dtype=np.int32) # ho 9 possibili azioni tra cui scegliere (da 0 a 8)
+        self.action_space = spaces.Discrete(10) # ho 30 possibili azioni tra cui scegliere (da 0 a 29)
         observation_length = (config['m'] + config['L'] - 1) + 2
         self.observation_space = spaces.Box(low=0, high=100, shape=(observation_length,), dtype=np.float32)
         # all'interno della box c'è un vettore di dimensioni observation_length
@@ -22,6 +22,7 @@ class InventoryEnvConfig(gym.Env):
         self.demand_not_satisfied=0
         self.perishability=0
         self.total_stock=0
+        #self.steps_since_update = 0
         self.c = config['c']
         self.h = config['h']
         self.b = config['b']
@@ -80,17 +81,10 @@ class InventoryEnvConfig(gym.Env):
                 taken = min(self.stock[i], demand)
                 self.stock[i] -= taken
                 demand -= taken
-        # Satisfy demand
-        for i in range(min(len(self.stock_bs), self.m)):
-            if demand > 0:
-                taken = min(self.stock_bs[i], demand)
-                self.stock_bs[i] -= taken
-                demand -= taken
-               
+                
         # Calculate rewards and metrics
         lost_sales = max(0, demand)
-        expired = self.stock[0]
- 
+        expired = self.stock[0] 
         satisfied_demand=(self.initial_demand - lost_sales)
         self.total_stock = np.sum(self.stock[:self.m])  # Sum only the first m elements
         self.total_stock_bs = np.sum(self.stock_bs[:self.m])  # Sum only the first m elements
@@ -100,7 +94,6 @@ class InventoryEnvConfig(gym.Env):
                   - self.w * (expired))
         reward /= 100.0  # Divide the reward by 100
         self.rewards_history.append(reward)  # Track the reward for each step
-       
         self.total_stock=self.total_stock
  
         # Update stock for the next period
@@ -111,10 +104,8 @@ class InventoryEnvConfig(gym.Env):
         self.price_transformed=(self.p * (self.initial_demand - lost_sales))
         self.holding_transformed=(self.h * (self.total_stock))
         self.demand_not_satisfied=(self.b * lost_sales)
-        self.perishability=(self.w * (expired))#
- 
-       
-       
+        self.perishability=(self.w * (expired))
+        
  
        
         # Calculate metrics for green and yellow items

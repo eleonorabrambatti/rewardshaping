@@ -169,7 +169,10 @@ class OnPolicyAlgorithm(BaseAlgorithm):
         self.policy.set_training_mode(False)
 
         n_steps = 0
+        count=0
         rollout_buffer.reset()
+        count+=1
+
         # Sample new weights for the state dependent exploration
         if self.use_sde:
             self.policy.reset_noise(env.num_envs)
@@ -177,9 +180,12 @@ class OnPolicyAlgorithm(BaseAlgorithm):
         callback.on_rollout_start()
         
         prev_val=0
-
+        #reward_averages = []
+        #reward_accumulator = 0
+        #num_accumulated_steps = 0
+        #F=0
         while n_steps < n_rollout_steps:
-            #print(f'n steps: {n_steps}')
+            
             if self.use_sde and self.sde_sample_freq > 0 and n_steps % self.sde_sample_freq == 0:
                 # Sample a new noise matrix
                 self.policy.reset_noise(env.num_envs)
@@ -207,21 +213,27 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
             #rewards_bs = evaluate_base_stock_performance(env_2, 16, 1000)
 
-            stock_bs = infos[0]['stock_bs']
+            base_stock_action = infos[0]['base_stock_action']
             
             #print(f'action ppo: {clipped_actions}, action bs: {base_stock_action}')
-            cur_val = -20 * abs(infos[0]['stock_bs'] - stock_bs)
+            cur_val = -50 * abs(clipped_actions - base_stock_action)
             F = cur_val - ((1/0.99)*prev_val)
             prev_val = cur_val
-            rewards = rewards + F
-            #print(f'final reward: {rewards}')
+            #print(f'current value: {cur_val}')
+            #reward_accumulator = 0
+            #num_accumulated_steps = 0  
+            #print(f'previous rewards: {rewards}')
+            rewards += F
+            #print(f'next rewards: {rewards}')
 
+            #rewards=rewards_10
+
+            #num_accumulated_steps += env.num_envs
             self.num_timesteps += env.num_envs
-            # Give access to local variables
+            #self.steps_since_update+=1
             callback.update_locals(locals())
             if not callback.on_step():
                 return False
-            
             self._update_info_buffer(infos, dones)
             n_steps += 1
 
