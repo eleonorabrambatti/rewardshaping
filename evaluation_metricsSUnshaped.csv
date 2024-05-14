@@ -1,0 +1,4 @@
+expired_green,expired_yellow,stock_green,stock_yellow,lost_sales_green,lost_sales_yellow,satisfied_green,satisfied_yellow,average_reward,reward_std,config_details
+0.0,0.0,5.700000000000002,0.0,0.5999999999999998,0.0,2.399999999999999,0.0,-0.5999999999999998,2.220446049250313e-16,m_4_L_2_Alpha_0_beta_0_p1_0_p2_0_c_0_h_1_b1_10_b2_0_w_2_mean_demand_3_coef_of_var_1e-11
+0.0,0.0,5.700000000000002,0.0,0.5999999999999998,0.0,2.399999999999999,0.0,-0.5999999999999998,2.220446049250313e-16,m_4_L_2_Alpha_0_beta_0_p1_0_p2_0_c_0_h_1_b1_10_b2_0_w_2_mean_demand_3_coef_of_var_1e-11
+0.0,0.0,5.700000000000002,0.0,0.5999999999999998,0.0,2.399999999999999,0.0,-0.5999999999999998,2.220446049250313e-16,m_4_L_2_Alpha_0_beta_0_p1_0_p2_0_c_0_h_1_b1_10_b2_0_w_2_mean_demand_3_coef_of_var_1e-11
