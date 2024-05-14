@@ -207,10 +207,10 @@ class OnPolicyAlgorithm(BaseAlgorithm):
 
             #rewards_bs = evaluate_base_stock_performance(env_2, 16, 1000)
 
-            base_stock_action = infos[0]['base_stock_action']
+            stock_bs = infos[0]['stock_bs']
             
             #print(f'action ppo: {clipped_actions}, action bs: {base_stock_action}')
-            cur_val = -50 * abs(clipped_actions - base_stock_action)
+            cur_val = -20 * abs(infos[0]['stock_bs'] - stock_bs)
             F = cur_val - ((1/0.99)*prev_val)
             prev_val = cur_val
             rewards = rewards + F

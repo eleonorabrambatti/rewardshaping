@@ -134,7 +134,7 @@ def save_metrics_to_dataframe(metrics, config_details, avg_reward, std_reward,
  
  
 total_configs = len(configurations)
-# Calculate indices for the configurations to visualize
+""" # Calculate indices for the configurations to visualize
 indices_to_visualize = []
  
 # Add two from the beginning
@@ -149,7 +149,7 @@ if total_configs > 4:
 # Add two from the end
 if total_configs > 2:
     indices_to_visualize.extend([total_configs-2, total_configs-1])
- 
+  """
 # Open CSV file in write mode
 with open('evaluation_metrics_BS.csv', mode='w', newline='') as file:
  
@@ -170,7 +170,7 @@ with open('evaluation_metrics_BS.csv', mode='w', newline='') as file:
         env = BaseStockConfig(config)  # Initialize environment with current configuration
         env.seed(42)
  
-        optimal_base_stock, optimal_reward = optimize_base_stock(env, 5, 20, 1000)
+        optimal_base_stock, optimal_reward = optimize_base_stock(env, 5, 22, 1000)
         #print(f"Optimal Base Stock Level: {optimal_base_stock}, with an average reward of: {optimal_reward}")
         env.reset()
  

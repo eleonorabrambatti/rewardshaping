@@ -3,8 +3,8 @@ import gym
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from ppo_sb3 import PPO
-from callbacks import EvalCallback, CheckpointCallback, BaseCallback
+from stable_baselines3.ppo import PPO
+from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback
 from stable_baselines3.common.callbacks import CallbackList
 from ppo_env import InventoryEnvConfig   # Adjusted import for your environment
 from stable_baselines3.common.env_util import make_vec_env
@@ -14,7 +14,7 @@ import sys
 import logging
 logging.basicConfig(level=logging.INFO)
 
-from BaseStock_env import BaseStockConfig
+#from BaseStock_env import BaseStockConfig
 sys.path.append('Users\ebrambatti\Documents\GitHub\rewardshaping\env_briw\ppo_env.py')
 
 from timeit import default_timer as timer
@@ -56,6 +56,8 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes):
         while not done:
             action, _states = model.predict(obs, deterministic=True)
             #logging.debug(f'action:  {action}')
+            action=int(action)
+            print(f'action:{action}')
             obs, reward, done, info = env.step(action) # qui una volta calcolato lo step viene registrato in info le order quantity che sarebbe l'azione
             # ho il vettore, soddifso la domanda shifto e arriva l'azione
             #logging.debug(f'observation:{obs} and {info}')
@@ -188,13 +190,13 @@ for config_index, config in enumerate(configurations):
     #env.reset()
     #object_bs = evaluations_bs['average_reward'][config_index]
     object_bs = evaluations_bs['action'][config_index]
-    env_2 = BaseStockConfig(config)
+    #env_2 = BaseStockConfig(config)
     #env = gym.make('Pippo-v0')
     # Parallel environments
     #env = make_vec_env('Pippo-v0', n_envs=4, config=config)
     #env = InventoryEnvConfig(config)
     model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
-                learning_rate=learning_rate, n_steps=5000, batch_size=50,
+                learning_rate=learning_rate, n_steps=50000, batch_size=50,
                 n_epochs=10, clip_range=0.1, gamma=0.99, ent_coef=0.01)
     
     #warmup_callback = WarmupCallback(warmup_steps=10000, start_prob=1.0, end_prob=0.1)
@@ -202,14 +204,14 @@ for config_index, config in enumerate(configurations):
 
     # Callbacks setup
     eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=env.num_episodes,
-                                 deterministic=True, render=False)
+                                 deterministic=False, render=False)
     checkpoint_callback = CheckpointCallback(save_freq=env.num_episodes, save_path='./logs/', name_prefix='ppo_model')
     callback = CallbackList([eval_callback, checkpoint_callback])
 
     # Train the model
     total_timesteps = env.total_timesteps
     #model.learn(total_timesteps=total_timesteps, callback=callback, env_2=env_2)
-    model.learn(total_timesteps=total_timesteps, callback=callback, object_bs=object_bs)
+    model.learn(total_timesteps=total_timesteps, callback=callback)
 
     # Evaluate the trained model
     mean_reward, mean_price, mean_hc, mean_dns, mean_perish, std_reward, detailed_metrics = evaluate_policy_and_log_detailed_metrics(model,
