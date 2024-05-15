@@ -67,3 +67,4 @@ m_4_L_2_p_0_c_0_h_1_b_100_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_1500
 m_4_L_2_p_0_c_0_h_1_b_1000_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_150000_num_episodes_1000_done_10_best_base_stock_15,-63.1507,13.44406785574962,0.0,95.91,6200.0,19.16
 m_4_L_2_p_0_c_0_h_1_b_10000_w_2_mean_demand_3_coef_of_var_0.3_total_timesteps_150000_num_episodes_1000_done_10_best_base_stock_17,-621.4596,134.1697593716259,0.0,119.6,62000.0,26.36
 >>>>>>> 602c12d4b5c14fe6e3e35cf20fb98e39f344c2d6
+m_4_L_2_p_0_c_0_h_1_b_1000000_w_2_mean_demand_3_coef_of_var_1e-06_total_timesteps_200000_num_episodes_1000_done_10_best_base_stock_nan,-60001.86000000001,7.275957614183426e-12,0.0,158.0,6000000.0,28.0

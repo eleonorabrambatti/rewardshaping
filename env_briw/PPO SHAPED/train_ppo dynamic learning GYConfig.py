@@ -11,21 +11,17 @@ from InventoryEnvGY_ConfigReshaped import InventoryEnvGYConfigRechaped   # Adjus
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Load configurations from an Excel file
-excel_path = r'\Users\mprivitera\Documents\GitHub\rewardshaping\configurations_ppo.xlsx'
+excel_path = r'..\rewardshaping\configurations_ppo.xlsx'
 df_configurations = pd.read_excel(excel_path, engine='openpyxl')
 configurations = df_configurations.to_dict('records')
 
 def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
     total_rewards = []
     metrics = {
-       'expired_green': [],
-       'expired_yellow': [],
-       'stock_green': [],  # Will be updated to reflect last m elements sum
-       'stock_yellow': [],
-       'lost_sales_green': [],
-       'lost_sales_yellow': [],
-       'satisfied_green': [],
-       'satisfied_yellow': [],
+       'expired': [],
+       'stock': [],  # Will be updated to reflect last m elements sum
+       'lost_sales': [],
+       'satisfied': [],
        'average_reward': [],
        'reward_std': [],
     }
@@ -39,14 +35,17 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
         while not done:
             action, _states = model.predict(obs, deterministic=True)
             action=np.around(action).astype(int)
-            print(f'action: {action}')
+            if action != 3:
+                print(f'action: {action}')
             obs, reward, done, info = env.step(action)
+            #if env.current_step > 2:
+                #print(f"step_cut: {env.current_step}")
             episode_rewards += reward
             
             # Accumulate metrics for each step
             for key in metrics:
-                if key == 'stock_green':
-                    # Directly use the 'stock_green' value from info which is now consistent
+                if key == 'stock':
+                    # Directly use the 'stock' value from info which is now consistent
                     episode_metrics[key].append(info[key])
                 else:
                     episode_metrics[key].append(info.get(key, 0))
@@ -104,7 +103,7 @@ for config_index, config in enumerate(configurations):
 
     # Callbacks setup
     eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=1000,
-                                 deterministic=True, render=False)
+                                 deterministic=False, render=False)
     checkpoint_callback = CheckpointCallback(save_freq=1000, save_path='./logs/', name_prefix='ppo_model')
     callback = CallbackList([eval_callback, checkpoint_callback])
 
@@ -114,7 +113,7 @@ for config_index, config in enumerate(configurations):
 
     # Evaluate the trained model
     env = InventoryEnvGYConfig(config) # Initialize environment with current configuration
-    mean_reward, std_reward, detailed_metrics = evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=2000)
+    mean_reward, std_reward, detailed_metrics = evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=20)
 
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
@@ -126,5 +125,20 @@ for config_index, config in enumerate(configurations):
     logs = np.load('./logs/evaluations.npz')
     timesteps = logs['timesteps']
     results = logs['results']
-    
 
+    #if config_index in indices_to_visualize:
+       # Generate and save the plot only for selected configurations
+    plt.figure(figsize=(10, 6))
+    plt.plot(timesteps, results.mean(axis=1))
+    plt.fill_between(timesteps, results.mean(axis=1) - results.std(axis=1), results.mean(axis=1) + results.std(axis=1), alpha=0.3)
+    plt.xlabel('Timesteps')
+    plt.ylabel('Mean Reward')
+    
+    # Create a more spaced-out title
+    config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
+    plt.title(f'Reward Convergence - Config: {config_str}\n', pad=20)  # Add pad for space
+    
+    plt.grid(True)
+    plot_filename = f'reward_convergence_{config_str}.pdf'
+    plt.savefig(plot_filename, dpi=300)  # Saves the plot with a dynamic name
+    plt.close()  # Close the plot explicitly to free up memory
