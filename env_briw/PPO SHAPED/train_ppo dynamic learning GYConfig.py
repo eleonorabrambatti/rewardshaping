@@ -38,8 +38,6 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
             if action != 3:
                 print(f'action: {action}')
             obs, reward, done, info = env.step(action)
-            #if env.current_step > 2:
-                #print(f"step_cut: {env.current_step}")
             episode_rewards += reward
             
             # Accumulate metrics for each step
@@ -112,7 +110,6 @@ for config_index, config in enumerate(configurations):
     model.learn(total_timesteps=total_timesteps, callback=callback)
 
     # Evaluate the trained model
-    env = InventoryEnvGYConfig(config) # Initialize environment with current configuration
     mean_reward, std_reward, detailed_metrics = evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=20)
 
     # Generate a unique filename suffix from configuration for saving results
