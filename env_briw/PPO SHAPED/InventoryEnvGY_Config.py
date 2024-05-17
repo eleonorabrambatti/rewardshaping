@@ -57,8 +57,8 @@ class InventoryEnvGYConfig(gym.Env):
         self.demand = np.round(np.random.gamma(self.shape, self.scale)).astype(int)
 
         if self.current_step < self.L:
-            if order_quantity != 3:
-                print(f'order_quantity: {order_quantity}')
+            #if order_quantity != 3:
+            #    print(f'order_quantity: {order_quantity}')
             self.demand = 0
         
         lost_demand = self.demand
@@ -89,13 +89,16 @@ class InventoryEnvGYConfig(gym.Env):
         
         # Calculate metrics for the items
         info = {
-        'stock': np.sum(self.stock[-self.m:]),  # Current stock
-        'expired': expired,
-        'lost_sales': lost_sales,
-        'satisfied': satisfied_demand,
-        'reward': reward,  # Include current step's reward
-        # Calculate and include the standard deviation of rewards up to the current step
-        'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
+            'demand': self.demand,
+            'stock': np.sum(self.stock[:self.m]),
+            'in_transit': np.sum(self.stock[-self.L:]),  # in transit
+            'expired_items': expired,
+            'lost_sales': lost_sales,
+            'satisfied_demand': satisfied_demand,
+            'orders': order_quantity,
+            'reward': reward,  # Include current step's reward
+            # Calculate and include the standard deviation of rewards up to the current step
+            'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
         }
         #if self.current_step < 2:
         #    reward = 0 

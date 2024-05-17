@@ -18,14 +18,17 @@ configurations = df_configurations.to_dict('records')
 def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
     total_rewards = []
     metrics = {
-       'expired': [],
+        'demand' : [],
+       'expired_items': [],
        'stock': [],  # Will be updated to reflect last m elements sum
+       'in_transit': [],
        'lost_sales': [],
-       'satisfied': [],
+       'satisfied_demand': [],
+       'orders': [],
        'average_reward': [],
        'reward_std': [],
     }
-
+    episodes = {key: [] for key in metrics}
     for episode in range(n_eval_episodes):
         obs = env.reset()
         done = False
@@ -45,22 +48,38 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
                 if key == 'stock':
                     # Directly use the 'stock' value from info which is now consistent
                     episode_metrics[key].append(info[key])
+                    #if episode == 0:
+                    #    episodes[key].append(info[key]) 
+                    #else:
+                    #    episodes[key][env.current_step]=episodes[key][env.current_step] + info[key]
                 else:
                     episode_metrics[key].append(info.get(key, 0))
-
+                    #if env.current_step == 1:
+                    #    episodes[key].append(info.get(key, 0))
+                    #else:
+                    #    episodes[key][env.current_step] = episodes[key][env.current_step] + info.get(key, 0)
+            #print(f'episodes: {episodes}')
         total_rewards.append(episode_rewards)
+
+        for key in metrics: 
+            if episode == 0:
+                episodes[key] = episode_metrics[key]
+            else:
+                episodes[key] = [x+y for x,y in zip(episodes[key], episode_metrics.get(key, [0]*len(episodes[key])))]
         
         # Calculate and aggregate episode metrics
         for key in metrics:
             metrics[key].append(np.mean(episode_metrics[key]))
-
+    #print(f'episodes: {episodes}')
     # Calculate average metrics over all episodes
     avg_metrics = {key: np.mean(value) for key, value in metrics.items()}
     avg_reward = np.mean(total_rewards)
     std_reward = np.std(total_rewards)
     #print(f"Average Reward: {avg_reward}, Reward STD: {std_reward}")
+    for key in episodes:
+        episodes[key] = [x/n_eval_episodes for x in episodes[key]]
      
-    return avg_reward, std_reward, avg_metrics
+    return avg_reward, std_reward, avg_metrics, episodes
 
 
 
@@ -106,11 +125,11 @@ for config_index, config in enumerate(configurations):
     callback = CallbackList([eval_callback, checkpoint_callback])
 
     # Train the model
-    total_timesteps = 30000
+    total_timesteps = 10000
     model.learn(total_timesteps=total_timesteps, callback=callback)
 
     # Evaluate the trained model
-    mean_reward, std_reward, detailed_metrics = evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=20)
+    mean_reward, std_reward, detailed_metrics, episode_metrics = evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=20)
 
     # Generate a unique filename suffix from configuration for saving results
     config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
@@ -122,6 +141,7 @@ for config_index, config in enumerate(configurations):
     logs = np.load('./logs/evaluations.npz')
     timesteps = logs['timesteps']
     results = logs['results']
+    steps = list(range(1, 11))
 
     #if config_index in indices_to_visualize:
        # Generate and save the plot only for selected configurations
@@ -139,3 +159,20 @@ for config_index, config in enumerate(configurations):
     plot_filename = f'reward_convergence_{config_str}.pdf'
     plt.savefig(plot_filename, dpi=300)  # Saves the plot with a dynamic name
     plt.close()  # Close the plot explicitly to free up memory
+    print(f'ep metrics: {np.array(episode_metrics)}')
+    for key in episode_metrics.keys():
+        if key != 'reward_sd':
+            plt.figure(figsize=(10, 6))
+            plt.plot(steps, np.array(episode_metrics[key]))
+            #plt.fill_between(episodes, np.array(episode_metrics[key]) - np.array(episode_metrics[key]).std(axis=1), np.array(episode_metrics[key]).mean(axis=1) + np.array(episode_metrics[key]).std(axis=1), alpha=0.3)
+            plt.xlabel('Timesteps')
+            plt.ylabel(f'{key}')
+            
+            # Create a more spaced-out title
+            config_str = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
+            plt.title(f'{key} - Config: {config_str}\n', pad=20)  # Add pad for space
+            
+            plt.grid(True)
+            plot_filename = f'{key}_{config_str}.pdf'
+            plt.savefig(plot_filename, dpi=300)  # Saves the plot with a dynamic name
+            plt.close()  # Close the plot explicitly to free up memory
