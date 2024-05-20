@@ -24,7 +24,7 @@ def evaluate_policy_and_log_detailed_metrics(env, bs_class, n_eval_episodes=10):
         episode_metrics = {key: [] for key in metrics}
 
         while not done:
-            action = bs_class.act(env.stock)
+            action = bs_class.act(env.info.get('stock'))
             action=np.around(action).astype(int)
             if action != 3:
                 print(f'action: {action}')

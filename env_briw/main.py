@@ -9,12 +9,12 @@ import BS
 from stable_baselines3 import PPO
 
 
-ppo = True
-bs = False
+ppo = False
+bs = True
 sQ = False
 
-train = False
-eval = True
+train = True
+eval = False
 
 def main():
     # Load configurations from an Excel file
@@ -29,7 +29,7 @@ def main():
     for i, config in enumerate(configurations):
         config_details = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
         env = InventoryEnvGYConfig(config)
-        total_timesteps = 10000
+        total_timesteps = 2
         if ppo:
             # Train and evaluate the model
             if train:
@@ -48,14 +48,14 @@ def main():
                 plot.plot_episodes_metrics(episodes_metrics, config_details, steps)
         elif bs:
             if train:
-                base_stock_level = train_BS.train_bs_policy(env, 5, 25, total_timesteps)
+                base_stock_level, levels, rewards = train_BS.train_bs_policy(env, 5, 25, total_timesteps)
+                plot.plot_rewards_per_bs_level(levels, rewards, config_details)
+                base_stock_level = config.get('base_stock_level') 
             else:
                 base_stock_level = config['base_stock_level']
-            bs_class = BS.BSpolicy(base_stock_level)
-            avg_reward, std_reward, avg_metrics, episodes_metrics = eval_BS.evaluate_policy_and_log_detailed_metrics(env, bs_class, n_eval_episodes=20)
-            eval_BS.save_metrics_to_dataframe(avg_metrics, config_details, avg_reward, std_reward, filename='evaluation_metrics_bs.csv')
-            train_BS.save_logs()
-            timesteps, results = plot.load_results_and_timesteps('timesteps.pkl', 'results.pkl')
-            plot.plot_reward_convergence(timesteps, results, config_details)
-            plot.plot_episodes_metrics(episodes_metrics, config_details, steps)
+            if eval:
+                bs_class = BS.BSpolicy(base_stock_level)
+                avg_reward, std_reward, avg_metrics, episodes_metrics = eval_BS.evaluate_policy_and_log_detailed_metrics(env, bs_class, n_eval_episodes=20)
+                eval_BS.save_metrics_to_dataframe(avg_metrics, config_details, avg_reward, std_reward, filename='evaluation_metrics_bs.csv')
+                plot.plot_episodes_metrics(episodes_metrics, config_details, steps)
 main()

@@ -26,6 +26,16 @@ def plot_reward_convergence(episodes, results, config_details):
     plot_filename = f'reward_convergence_{config_details}.pdf'
     plt.savefig(plot_filename, dpi=300) 
 
+def plot_rewards_per_bs_level(levels, rewards, config_details):
+    plt.figure(figsize=(10, 6))
+    plt.plot(levels, rewards)
+    plt.xlabel('Base Stock Level')
+    plt.ylabel('Average Reward')
+    plt.title(f'rewards per bs level - Config: {config_details}\n', pad=20)  # Add pad for space
+    plt.grid(True)
+    plot_filename = f'reward_per_bs_level_{config_details}.pdf'
+    plt.savefig(plot_filename, dpi=300) 
+
 def plot_episodes_metrics(episode_metrics, config_details, steps):
     for key in episode_metrics.keys():
         if key != 'reward_sd':
