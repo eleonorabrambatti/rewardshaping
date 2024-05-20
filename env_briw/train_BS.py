@@ -44,30 +44,3 @@ def train_bs_policy(env, min_base_stock, max_base_stock, total_timesteps):
    
     return best_base_stock, levels, avg_rewards
 
-""" def save_logs():
-    # Load the logs and save the plot
-    logs = np.load('./logs/evaluations.npz')
-    timesteps = logs['timesteps']
-    results = logs['results']
-    # Salva i timesteps e i risultati in due file separati in formato pkl
-    timesteps_filename = 'timesteps.pkl'
-    results_filename = 'results.pkl'
-    # Salvataggio dei timesteps
-    with open(timesteps_filename, 'wb') as f:
-        pickle.dump(timesteps, f)
-
-    # Salvataggio dei risultati
-    with open(results_filename, 'wb') as f:
-        pickle.dump(results, f) """
-
-def save_best_bs_level(best_base_stock, filename='evaluation_metrics.csv'):
-    metrics_dict['config_details'] = best_base_stock
-    metrics_dict['avg_reward'] = avg_reward
-    metrics_dict['std_reward'] = std_reward
-
-    df = pd.DataFrame([metrics_dict])
-
-    if not os.path.isfile(filename):
-        df.to_csv(filename, index=False)
-    else:
-        df.to_csv(filename, mode='a', header=False, index=False)
