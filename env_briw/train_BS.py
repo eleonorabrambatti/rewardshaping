@@ -30,11 +30,9 @@ def train_bs_policy(env, min_base_stock, max_base_stock, total_timesteps):
             env.base_stock_level = base_stock_level  # Set the base stock level for this episode
             done = False
             while not done:
-                print(f'prima total_stock: {env.total_stock}, sum:{np.sum(env.stock[:env.m])}')
-                action = bs.act(np.sum(env.stock[:env.m]))  # Sample an action
+                action = bs.act(env.total_stock)  # Sample an action
                 #_, reward, done, _ = env.step(action)  # Take a step in the environment
                 _, reward, done, _=env.step(action)
-                print(f'dopo total_stock: {env.total_stock}, sum:{np.sum(env.stock[:env.m])}')
                 total_reward += reward
         average_reward = total_reward / total_timesteps
         print(f"Base Stock Level: {base_stock_level}, Average Reward: {average_reward}")
@@ -61,3 +59,15 @@ def train_bs_policy(env, min_base_stock, max_base_stock, total_timesteps):
     # Salvataggio dei risultati
     with open(results_filename, 'wb') as f:
         pickle.dump(results, f) """
+
+def save_best_bs_level(best_base_stock, filename='evaluation_metrics.csv'):
+    metrics_dict['config_details'] = best_base_stock
+    metrics_dict['avg_reward'] = avg_reward
+    metrics_dict['std_reward'] = std_reward
+
+    df = pd.DataFrame([metrics_dict])
+
+    if not os.path.isfile(filename):
+        df.to_csv(filename, index=False)
+    else:
+        df.to_csv(filename, mode='a', header=False, index=False)

@@ -87,6 +87,7 @@ class InventoryEnvGYConfig(gym.Env):
         self.stock = np.roll(self.stock, -1)
         self.stock[-1] = order_quantity  # Add new order at the end
         self.total_stock = np.sum(self.stock[:self.m])
+        #print(f' ts dopo: {total_stock}')
         
         # Calculate metrics for the items
         info = {

@@ -7,6 +7,7 @@ import eval_BS
 import plot
 import BS
 from stable_baselines3 import PPO
+from openpyxl import load_workbook
 
 
 ppo = False
@@ -29,7 +30,7 @@ def main():
     for i, config in enumerate(configurations):
         config_details = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
         env = InventoryEnvGYConfig(config)
-        total_timesteps = 2
+        total_timesteps = 10000
         if ppo:
             # Train and evaluate the model
             if train:
@@ -50,7 +51,8 @@ def main():
             if train:
                 base_stock_level, levels, rewards = train_BS.train_bs_policy(env, 5, 25, total_timesteps)
                 plot.plot_rewards_per_bs_level(levels, rewards, config_details)
-                base_stock_level = config.get('base_stock_level') 
+                df_configurations.at[i, 'base_stock_level'] = base_stock_level
+                df_configurations.to_excel(excel_path, index=False, engine='openpyxl')
             else:
                 base_stock_level = config['base_stock_level']
             if eval:
