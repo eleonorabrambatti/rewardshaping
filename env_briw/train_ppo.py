@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, CallbackList
-# Adjusted import for your environment
-from env import InventoryEnvGYConfig
 import pickle
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 

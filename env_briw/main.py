@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from env import InventoryEnvGYConfig
 import train_ppo
 import train_BS

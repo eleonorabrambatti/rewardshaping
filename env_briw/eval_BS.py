@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
-import pickle
 import os
-from BS import BSpolicy
 
 
 def evaluate_policy_and_log_detailed_metrics(env, bs_class, n_eval_episodes=10):
