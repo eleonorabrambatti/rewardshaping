@@ -48,17 +48,8 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
                 if key == 'stock':
                     # Directly use the 'stock' value from info which is now consistent
                     episode_metrics[key].append(info[key])
-                    #if episode == 0:
-                    #    episodes[key].append(info[key]) 
-                    #else:
-                    #    episodes[key][env.current_step]=episodes[key][env.current_step] + info[key]
                 else:
                     episode_metrics[key].append(info.get(key, 0))
-                    #if env.current_step == 1:
-                    #    episodes[key].append(info.get(key, 0))
-                    #else:
-                    #    episodes[key][env.current_step] = episodes[key][env.current_step] + info.get(key, 0)
-            #print(f'episodes: {episodes}')
         total_rewards.append(episode_rewards)
 
         for key in metrics: 
@@ -68,9 +59,8 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
                 episodes[key] = [x+y for x,y in zip(episodes[key], episode_metrics.get(key, [0]*len(episodes[key])))]
         
         # Calculate and aggregate episode metrics
-        for key in metrics:
             metrics[key].append(np.mean(episode_metrics[key]))
-    #print(f'episodes: {episodes}')
+
     # Calculate average metrics over all episodes
     avg_metrics = {key: np.mean(value) for key, value in metrics.items()}
     avg_reward = np.mean(total_rewards)
@@ -85,8 +75,6 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
 
 def save_metrics_to_dataframe(metrics, config_details, avg_reward, std_reward, filename='evaluation_metrics.csv'):
     metrics['config_details'] = str(config_details)  # Add configuration details for comparison
-    print(f"Average Reward before DataFrame: {metrics['average_reward']}")
-    print(f"Reward STD before DataFrame: {metrics['reward_std']}")
     metrics['average_reward'] = avg_reward
     metrics['reward_std'] = std_reward
     df = pd.DataFrame([metrics])
