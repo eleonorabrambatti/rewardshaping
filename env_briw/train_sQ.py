@@ -1,6 +1,6 @@
 import numpy as np
 from sQ import sQpolicy
-import pickle
+import numpy as np
 
 
 def train_sQ_policy(env, min_s, max_s, min_Q, max_Q, num_episodes_per_level):
@@ -28,7 +28,7 @@ def train_sQ_policy(env, min_s, max_s, min_Q, max_Q, num_episodes_per_level):
             total_reward = 0
             env.reset()  # Reset the environment for a new episode
             sq = sQpolicy(s, q)
-            for i in range(num_episodes_per_level):
+            for _ in range(num_episodes_per_level):
                 # print(f' num episodes: {i}')
                 # env.reset()  # Reset the environment for a new episode
                 env.s = s  # Set the base stock level for this episode
@@ -50,3 +50,26 @@ def train_sQ_policy(env, min_s, max_s, min_Q, max_Q, num_episodes_per_level):
                 best_Q = q
 
     return best_s, best_Q, levels, avg_rewards
+
+
+
+def fun(x, env):
+    s, q = x
+    s=np.around(s)
+    q=np.around(q)
+    total_reward = 0
+    num_episodes_per_level = 1000  # Numero di episodi per livello
+    sq = sQpolicy(s, q)
+    env.reset()
+    for _ in range(num_episodes_per_level):
+         # Reset dell'ambiente per un nuovo episodio
+        env.s = s
+        env.Q = q
+        done = False
+        while not done:
+            action = sq.act(env.total_stock)
+            _, reward, done, _ = env.step(action)
+            total_reward += reward
+    
+    average_reward = total_reward / num_episodes_per_level
+    return -average_reward  # Restituiamo il negativo perché stiamo minimizzando

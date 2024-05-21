@@ -1,6 +1,6 @@
 import numpy as np
 from BS import BSpolicy
-import pickle
+
 
 def train_bs_policy(env, min_base_stock, max_base_stock, total_timesteps):
     """
@@ -43,4 +43,26 @@ def train_bs_policy(env, min_base_stock, max_base_stock, total_timesteps):
             best_base_stock = base_stock_level
    
     return best_base_stock, levels, avg_rewards
+
+
+
+def fun(x, env):
+    s = x
+    total_reward = 0
+    num_episodes_per_level = 20000  # Numero di episodi per livello
+    env.reset() 
+    s=np.around(s)
+    bs = BSpolicy(s)
+    
+    for _ in range(num_episodes_per_level):
+          # Reset dell'ambiente per un nuovo episodio
+        env.base_stock_level = np.around(s)  # Setta il livello di base stock per questo episodio (s=s) # Imposta il livello di base stock per questo episodio
+        done = False
+        while not done:
+            action = bs.act(env.total_stock)
+            _, reward, done, _ = env.step(action)
+            total_reward += reward
+    
+    average_reward = total_reward / num_episodes_per_level
+    return -average_reward  # Restituiamo il negativo perché stiamo minimizzando
 

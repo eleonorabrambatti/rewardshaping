@@ -76,7 +76,7 @@ class InventoryEnvGYConfig(gym.Env):
         expired = self.stock[0]
         satisfied_demand = (self.demand - lost_sales)
         # Sum only the first m elements
-        # self.total_stock = np.sum(self.stock[:self.m])
+        self.total_stock = np.sum(self.stock[:self.m])
         reward = (self.p * (self.demand - lost_sales) -
                   self.c * order_quantity - self.h * (self.total_stock) -
                   self.b * lost_sales -
@@ -89,7 +89,6 @@ class InventoryEnvGYConfig(gym.Env):
         self.stock = np.roll(self.stock, -1)
         self.stock[-1] = order_quantity  # Add new order at the end
         self.total_stock = np.sum(self.stock[:self.m])
-        # print(f' ts dopo: {total_stock}')
 
         # Calculate metrics for the items
         info = {
@@ -104,7 +103,7 @@ class InventoryEnvGYConfig(gym.Env):
             # Calculate and include the standard deviation of rewards up to the current step
             'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
         }
-        print(info)
+        #print(info)
         # if self.current_step < 2:
         #    reward = 0
         self.current_step += 1
