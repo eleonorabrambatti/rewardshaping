@@ -8,7 +8,7 @@ class InventoryEnvGYConfig(gym.Env):
         super(InventoryEnvGYConfig, self).__init__()
         # Action and observation spaces
         self.action_space = spaces.Discrete(4)
-        #self.action_space = spaces.Box(low=np.array(
+        # self.action_space = spaces.Box(low=np.array(
         #    [0]), high=np.array([3]), dtype=np.float32)
         observation_length = (config['m'] + config['L'] - 1) + 2
         self.observation_space = spaces.Box(
@@ -52,7 +52,6 @@ class InventoryEnvGYConfig(gym.Env):
         np.random.seed(seed)
 
     def step(self, action):
-        current_inventory_level = np.sum(self.stock)
         # order_quantity = action[0]
         order_quantity = np.around(action).astype(int)
         # Generate total demand
@@ -77,7 +76,7 @@ class InventoryEnvGYConfig(gym.Env):
         expired = self.stock[0]
         satisfied_demand = (self.demand - lost_sales)
         # Sum only the first m elements
-        self.total_stock = np.sum(self.stock[:self.m])
+        # self.total_stock = np.sum(self.stock[:self.m])
         reward = (self.p * (self.demand - lost_sales) -
                   self.c * order_quantity - self.h * (self.total_stock) -
                   self.b * lost_sales -

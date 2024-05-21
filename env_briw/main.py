@@ -16,10 +16,10 @@ from openpyxl import load_workbook
 
 ppo = False
 bs = False
-sq = False
-dqn = True
+sq = True
+dqn = False
 train = True
-# eval = True
+eval = False
 
 
 def main():
@@ -96,7 +96,7 @@ def main():
         elif sq:
             if train:
                 best_s, best_Q, levels, rewards = train_sQ.train_sQ_policy(
-                    env, 5, 10, 1, 4, total_timesteps)
+                    env, 5, 5, 1, 4, total_timesteps)
                 # plot.plot_rewards_per_sq_level(levels, rewards, config_details)
             # else:
             #    base_stock_level = config['base_stock_level']

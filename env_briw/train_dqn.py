@@ -7,17 +7,12 @@ import pickle
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 
-def train_dqn_model(config_index, env, policy_kwargs, learning_rate, total_timesteps=30_000):
+def train_dqn_model(config_index, env, policy_kwargs, learning_rate, total_timesteps=30000):
     # Loop through each configuration
 
     env.seed(42)  # Setting environment seed
 
-    model = DQN('MlpPolicy', env, learning_rate=learning_rate, buffer_size=1_000_000,
-                learning_starts=100, batch_size=100, tau=1.0,
-                gamma=0.99, train_freq=4, gradient_steps=total_timesteps,
-                policy_kwargs=policy_kwargs, stats_window_size=100, verbose=1,
-                device="auto",
-                )
+    model = DQN('MlpPolicy', env)
 
     # Callbacks setup
     eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=1000,
