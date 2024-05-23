@@ -1,8 +1,13 @@
 import numpy as np
 from BS import BSpolicy
+import os
+import pickle
 
 
-def train_bs_policy(env, min_base_stock, max_base_stock, total_timesteps):
+def train_bs_policy(env, output_dir, min_base_stock, max_base_stock, total_timesteps):
+    subdir = 'pickle_file'
+    full_path = os.path.join(output_dir, subdir)
+    os.makedirs(full_path, exist_ok=True)
     """
     Find the optimal base stock level that maximizes rewards.
 
@@ -43,8 +48,17 @@ def train_bs_policy(env, min_base_stock, max_base_stock, total_timesteps):
         if average_reward > best_average_reward:
             best_average_reward = average_reward
             best_base_stock = base_stock_level
+    
+    filename = os.path.join(full_path, f'levels.pkl')
+    with open(filename, 'wb') as f:
+            pickle.dump(levels, f)
+    filename = os.path.join(full_path, f'avg_rewards.pkl')
+    with open(filename, 'wb') as f:
+            pickle.dump(avg_rewards, f)
+    filename = os.path.join(full_path, f'best_base_stock.pkl')
+    with open(filename, 'wb') as f:
+            pickle.dump(best_base_stock, f)
 
-    return best_base_stock, levels, avg_rewards
 
 
 def fun(x, env):
@@ -75,5 +89,6 @@ def fun(x, env):
     levels.append(s)
     avg_rewards.append(average_reward)
     # Restituiamo il negativo perché stiamo minimizzando
+
 
     return -average_reward

@@ -28,8 +28,8 @@ bs = True
 sq = False
 
 
-train = True
-plot_train = False
+train = False
+plot_train = True
 eval = False
 plot_eval = False
 
@@ -104,38 +104,54 @@ def main():
 
     
         elif bs:
-            if train:
+            subdir = 'bs'
+            full_path = os.path.join(output_dir, subdir)
+            os.makedirs(full_path, exist_ok=True)
 
+            bf_manual_path = os.path.join(full_path, 'brute_force_manual')
+            os.makedirs(bf_manual_path, exist_ok=True)
+            
+            if train:
+                start_time = time.time()
+
+                # powell_path = os.path.join(full_path, 'powell')
+                # os.makedirs(powell_path, exist_ok=True)
                 #bnds = [(5, 25)]
                 # initial_guess = 5
-                start_time = time.time()
                 # res = optimize.minimize(train_BS.fun, initial_guess, args=(
                 #    env,), method='Powell', bounds=bnds, tol=0.00001)
                 # end_time = time.time()
 
                 # elapsed_time = end_time - start_time
                 # print(elapsed_time)
-                # show_options(solver="minimize",
-                #             method="Powell", disp=True)
                 # print("Best s:", np.around(res.x[0]))
 
                 # print("Best average reward:", -res.fun)
-                #rranges = [slice(0, 25, 1)]
+
+                # bf_scipy_path = os.path.join(full_path, 'brute_force_scipy')
+                # os.makedirs(bf_scipy_path, exist_ok=True)
+                #rranges = [slice(5, 15, 1)]
                 #resbrute = optimize.brute(train_BS.fun, rranges, args=(
-                #    env,), Ns=50, full_output=True,
-                #    finish=optimize.fmin)
+                #    env,), full_output=True, finish=None)
+
                 #end_time = time.time()
                 #elapsed_time = end_time - start_time
                 #print(elapsed_time)
                 #print(resbrute[0])
-                #print("Best average reward:", -resbrute[1])
-                #res = optimize.minimize(train_BS.fun,np.array([10,]), args=(env,), method='Powell', bounds=bnds)
-                base_stock_level, levels, rewards = train_BS.train_bs_policy(
-                     env, 5, 25, total_timesteps)
+                #print(resbrute[1])
+                #print(resbrute[3])
+                #grid_values = resbrute[3]
+                #print(grid_values.size)
+
+                bf_manual_path = os.path.join(full_path, 'brute_force_manual')
+                os.makedirs(bf_manual_path, exist_ok=True)
+                train_BS.train_bs_policy(
+                     env, bf_manual_path, 5, 25, total_timesteps)
                 end_time = time.time()
                 elapsed_time = end_time - start_time
                 print(elapsed_time)
-                # plot.plot_rewards_per_bs_level(levels, rewards, config_details)
+            if plot_train:    
+                plot.plot_rewards_per_bs_level(bf_manual_path)
 
                 # df_configurations.at[i,
                 #                     'base_stock_level'] = base_stock_level
