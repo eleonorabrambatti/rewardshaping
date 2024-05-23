@@ -23,7 +23,7 @@ sq = True
 dqn = False
 train = True
 eval = True
-# ciao
+# ciao a tutti
 
 
 def main():
