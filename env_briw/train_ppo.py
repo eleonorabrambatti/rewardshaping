@@ -7,38 +7,41 @@ import pickle
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 
-def train_ppo_model(config_index, env, policy_kwargs, learning_rate, total_timesteps=30000):
+def train_ppo_model(env, learning_rate, total_timesteps, full_path, n_steps, batch_size, n_epochs):
     # Loop through each configuration
 
     env.seed(42)  # Setting environment seed
 
-    model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
-                learning_rate=learning_rate, n_steps=32, batch_size=32,
-                n_epochs=10, clip_range=0.1, gamma=0.99, ent_coef=0.01)
+    model = PPO('MlpPolicy', env, learning_rate=learning_rate, n_steps=n_steps, batch_size=batch_size,
+                n_epochs=n_epochs)
 
     # Callbacks setup
-    eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=1000,
+    eval_callback = EvalCallback(env, best_model_save_path=f'./{full_path}/logs/', log_path=f'./{full_path}/logs/', eval_freq=1000,
                                     deterministic=False, render=False)
     checkpoint_callback = CheckpointCallback(
-        save_freq=1000, save_path='./logs/', name_prefix='ppo_model')
+        save_freq=1000, save_path=f'./{full_path}/logs/', name_prefix='ppo_model')
     callback = CallbackList([eval_callback, checkpoint_callback])
 
     # Train the model
     model.learn(total_timesteps=total_timesteps, callback=callback)
 
     # Save the trained model
-    model.save(f"./logs/ppo_model_{config_index}")
+    model_path = os.path.join(full_path, f"./logs/ppo_model")
+    model.save(model_path)
 
     return model
 
-def save_logs():
+def save_logs(output_dir):
+    subdir = 'pickle_file'
+    full_path = os.path.join(output_dir, subdir)
+    os.makedirs(full_path, exist_ok=True)
     # Load the logs and save the plot
-    logs = np.load('./logs/evaluations.npz')
+    logs = np.load(f'./{output_dir}/logs/evaluations.npz')
     timesteps = logs['timesteps']
     results = logs['results']
     # Salva i timesteps e i risultati in due file separati in formato pkl
-    timesteps_filename = 'timesteps.pkl'
-    results_filename = 'results.pkl'
+    timesteps_filename = os.path.join(full_path, 'timesteps.pkl')
+    results_filename = os.path.join(full_path, 'results.pkl')
     # Salvataggio dei timesteps
     with open(timesteps_filename, 'wb') as f:
         pickle.dump(timesteps, f)
