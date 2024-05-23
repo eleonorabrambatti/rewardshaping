@@ -103,7 +103,7 @@ class InventoryEnvGYConfig(gym.Env):
             # Calculate and include the standard deviation of rewards up to the current step
             'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
         }
-        #print(info)
+        print(info)
         # if self.current_step < 2:
         #    reward = 0
         self.current_step += 1

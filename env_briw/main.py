@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from env import InventoryEnvGYConfig
 import train_ppo
 import train_BS
@@ -6,24 +7,34 @@ import train_sQ
 import train_dqn
 import eval_ppo
 import eval_BS
+import eval_dqn
 import plot
 import BS
 import sQ
+import time
 from stable_baselines3 import PPO
 from stable_baselines3 import DQN
+import scipy.optimize as optimize
+import numpy as np
+from scipy.optimize import Bounds
+from scipy.optimize import show_options
 from openpyxl import load_workbook
+
+# Set the following flags to True to run the corresponding algorithm
+
 import scipy.optimize as optimize
 import numpy as np
 from scipy.optimize import Bounds
 
 
 ppo = False
-bs = False
-sq = True
 dqn = False
+bs = True
+sq = False
+
+
 train = True
 eval = True
-# ciao a tutti
 
 
 def main():
@@ -39,32 +50,50 @@ def main():
     for i, config in enumerate(configurations):
         config_details = "_".join(
             [f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
+        output_dir = f'{config_details}'
         env = InventoryEnvGYConfig(config)
-        total_timesteps = 10000
+        total_timesteps = 20000
         if ppo:
+
+            n_steps = 500
+            batch_size = 50
+            n_epochs = 10
+
+            subdir = 'ppo'
+            subdir_1 = f'lr_{learning_rate}_n_steps_{n_steps}_batch_size_{batch_size}_n_epochs_{n_epochs}'
+            full_path = os.path.join(output_dir, subdir, subdir_1)
+            os.makedirs(full_path, exist_ok=True)
             # Train and evaluate the model
             if train:
                 model = train_ppo.train_ppo_model(
-                    i, env, policy_kwargs, learning_rate, total_timesteps)
-                train_ppo.save_logs()
-                timesteps, results = plot.load_results_and_timesteps(
-                    'timesteps.pkl', 'results.pkl')
-                plot.plot_reward_convergence(
-                    timesteps, results, config_details)
-            else:
-                model = PPO('MlpPolicy', env, policy_kwargs=policy_kwargs, verbose=0,
-                            learning_rate=learning_rate, n_steps=32, batch_size=32,
-                            n_epochs=10, clip_range=0.1, gamma=0.99, ent_coef=0.01)
-                model = PPO.load(f"./logs/ppo_model_{i}")
+                    env, learning_rate, total_timesteps, full_path, n_steps, batch_size, n_epochs)
+            if plot_train:
+                train_ppo.save_logs(full_path)
+                plot.plot_reward_convergence(full_path)
+
             if eval:
-                avg_reward, std_reward, avg_metrics, episodes_metrics = eval_ppo.evaluate_policy_and_log_detailed_metrics(
-                    model, env, n_eval_episodes=20)
-                eval_ppo.save_metrics_to_dataframe(
-                    avg_metrics, config_details, avg_reward, std_reward, filename='evaluation_metrics_ppo.csv')
-                plot.plot_episodes_metrics(
-                    episodes_metrics, config_details, steps)
-        if dqn:
-            # Train and evaluate the model
+                model_path = os.path.join(full_path, f"./logs/ppo_model")
+
+                model = PPO.load(model_path)
+                eval_ppo.evaluate_policy_and_log_detailed_metrics(
+                    model, env, full_path, n_eval_episodes=20)
+
+            if plot_eval:
+                eval_ppo.save_metrics_to_dataframe(full_path, config_details)
+                plot.plot_episodes_metrics(steps, full_path)
+
+        elif dqn:
+
+            batch_size = 32
+            buffer_size = 1000
+            gradient_steps = 1
+            target_update_interval = 1000
+
+            subdir = 'dqn'
+            subdir_1 = f'lr_{learning_rate}_batch_size_{batch_size}_buffer_size_{buffer_size}_gradient_steps_{gradient_steps}_target_update_interval_{target_update_interval}'
+            full_path = os.path.join(output_dir, subdir, subdir_1)
+            os.makedirs(full_path, exist_ok=True)
+
             if train:
                 model = train_dqn.train_dqn_model(
                     i, env, policy_kwargs, learning_rate, total_timesteps)
@@ -137,7 +166,4 @@ def main():
             #    eval_BS.save_metrics_to_dataframe(
             #        avg_metrics, config_details, avg_reward, std_reward, filename='evaluation_metrics_bs.csv')
             #    plot.plot_episodes_metrics(
-            #        episodes_metrics, config_details, steps)
-
-
-main()
+            #        episodes_metrics, config_details, steps) """

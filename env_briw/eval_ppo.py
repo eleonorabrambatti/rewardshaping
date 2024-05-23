@@ -1,9 +1,13 @@
 import numpy as np
 import pandas as pd
 import os
+import pickle
 
 
-def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
+def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_episodes=10):
+    subdir = 'pickle_file'
+    full_path = os.path.join(output_dir, subdir)
+    os.makedirs(full_path, exist_ok=True)
     total_rewards = []
     metrics = {
         'demand' : [],
@@ -26,8 +30,7 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
         while not done:
             action, _states = model.predict(obs, deterministic=True)
             action=np.around(action).astype(int)
-            if action != 3:
-                print(f'action: {action}')
+            print(f'action: {action}')
             obs, reward, done, info = env.step(action)
             episode_rewards += reward
             
@@ -51,22 +54,56 @@ def evaluate_policy_and_log_detailed_metrics(model, env, n_eval_episodes=10):
 
     # Calculate average metrics over all episodes
     avg_metrics = {key: np.mean(value) for key, value in metrics.items()}
+    filename = os.path.join(full_path, f'avg_metrics.pkl')
+    with open(filename, 'wb') as f:
+                pickle.dump(avg_metrics, f)
+
     avg_reward = np.mean(total_rewards)
+    filename = os.path.join(full_path, f'avg_reward.pkl')
+    with open(filename, 'wb') as f:
+                pickle.dump(avg_reward, f)
+
     std_reward = np.std(total_rewards)
+    filename = os.path.join(full_path, f'std_reward.pkl')
+    with open(filename, 'wb') as f:
+                pickle.dump(std_reward, f)
     #print(f"Average Reward: {avg_reward}, Reward STD: {std_reward}")
     for key in episodes:
         episodes[key] = [x/n_eval_episodes for x in episodes[key]]
      
-    return avg_reward, std_reward, avg_metrics, episodes
+        if key != 'reward_std':
+            value=episodes[key]
+            filename = os.path.join(full_path, f'{key}.pkl')
+            with open(filename, 'wb') as f:
+                pickle.dump(value, f)
 
 
-def save_metrics_to_dataframe(metrics_dict, config_details, avg_reward, std_reward, filename='evaluation_metrics.csv'):
+def save_metrics_to_dataframe(output_dir, config_details):
+    subdir = 'pickle_file'
+    full_path = os.path.join(output_dir, subdir)
+    os.makedirs(full_path, exist_ok=True)
+
+    subdir_avg_metrics = 'pickle_file/avg_metrics.pkl'
+    subdir_avg_reward = 'pickle_file/avg_reward.pkl'
+    subdir_std_reward = 'pickle_file/std_reward.pkl'
+    avg_metrics_path = os.path.join(output_dir, subdir_avg_metrics)    
+    avg_reward_path = os.path.join(output_dir, subdir_avg_reward)
+    std_reward_path = os.path.join(output_dir, subdir_std_reward)
+
+    with open(avg_metrics_path, 'rb') as file:
+        metrics_dict = pickle.load(file)
+    with open(avg_reward_path, 'rb') as file:
+        avg_reward = pickle.load(file)
+    with open(std_reward_path, 'rb') as file:
+        std_reward = pickle.load(file)
+
     metrics_dict['config_details'] = str(config_details)
     metrics_dict['avg_reward'] = avg_reward
     metrics_dict['std_reward'] = std_reward
 
+    filename='evaluation_metrics_ppo.csv'
     df = pd.DataFrame([metrics_dict])
-
+    filename = os.path.join(output_dir, filename)
     if not os.path.isfile(filename):
         df.to_csv(filename, index=False)
     else:

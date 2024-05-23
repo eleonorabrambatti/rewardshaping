@@ -1,20 +1,24 @@
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 
-def load_results_and_timesteps(timesteps_path, results_path):
-    """
-    Load timesteps, results, and configuration from files.
-    """
-    with open(timesteps_path, 'rb') as file:
-        timesteps = pickle.load(file)
+
+def plot_reward_convergence(output_dir):
+    subdir_results = 'pickle_file/results.pkl'
+    subdir_episodes = 'pickle_file/timesteps.pkl'
+    results_path = os.path.join(output_dir, subdir_results)    
+    episodes_path = os.path.join(output_dir, subdir_episodes)
+
+    with open(episodes_path, 'rb') as file:
+        episodes = pickle.load(file)
     with open(results_path, 'rb') as file:
         results = pickle.load(file)
-    return timesteps, results
 
-
-def plot_reward_convergence(episodes, results, config_details):
+    subdir = 'train_graph'
+    plot_path = os.path.join(output_dir, subdir)
+    os.makedirs(plot_path, exist_ok=True)
 
     mean_rewards = np.mean(results, axis=1)
     std_rewards = np.std(results, axis=1)
@@ -25,9 +29,9 @@ def plot_reward_convergence(episodes, results, config_details):
     plt.xlabel('Episodes')
     plt.ylabel('Mean Reward')
     # Add pad for space
-    plt.title(f'Reward Convergence - Config: {config_details}\n', pad=20)
+    plt.title(f'Reward Convergence\n', pad=20)
     plt.grid(True)
-    plot_filename = f'reward_convergence_{config_details}.pdf'
+    plot_filename = os.path.join(plot_path, f'reward_convergence.pdf')
     plt.savefig(plot_filename, dpi=300)
 
 
@@ -55,20 +59,31 @@ def plot_rewards_per_sq_level(levels, rewards, config_details):
     plt.savefig(plot_filename, dpi=300)
 
 
-def plot_episodes_metrics(episode_metrics, config_details, steps):
-    for key in episode_metrics.keys():
-        if key != 'reward_sd':
-            plt.figure(figsize=(10, 6))
-            plt.plot(steps, np.array(episode_metrics[key]))
-            # plt.fill_between(episodes, np.array(episode_metrics[key]) - np.array(episode_metrics[key]).std(axis=1), np.array(episode_metrics[key]).mean(axis=1) + np.array(episode_metrics[key]).std(axis=1), alpha=0.3)
-            plt.xlabel('Steps')
-            plt.ylabel(f'{key}')
+def plot_episodes_metrics(steps, output_dir):
+    subdir_pickle = 'pickle_file'
+    components_path = os.path.join(output_dir, subdir_pickle) 
 
-            plt.title(f'{key} - Config: {config_details}\n',
-                      pad=20)  # Add pad for space
+    subdir = 'eval_graph'
+    full_path = os.path.join(output_dir, subdir)
+    os.makedirs(full_path, exist_ok=True)
+    keys = ['demand', 'expired_items', 'stock', 'in_transit', 'lost_sales', 'satisfied_demand', 'orders', 'average_reward']
 
-            plt.grid(True)
-            plot_filename = f'{key}_{config_details}.pdf'
-            # Saves the plot with a dynamic name
-            plt.savefig(plot_filename, dpi=300)
-            plt.close()  # Close the plot explicitly to free up memory
+    for key in keys:
+        path = os.path.join(components_path, f'{key}.pkl')
+        with open(path, 'rb') as file:
+            metric = pickle.load(file)
+    
+        plt.figure(figsize=(10, 6))
+        plt.plot(steps, np.array(metric))
+        # plt.fill_between(episodes, np.array(episode_metrics[key]) - np.array(episode_metrics[key]).std(axis=1), np.array(episode_metrics[key]).mean(axis=1) + np.array(episode_metrics[key]).std(axis=1), alpha=0.3)
+        plt.xlabel('Steps')
+        plt.ylabel(f'{key}')
+
+        plt.title(f'{key}\n', pad=20)  # Add pad for space
+
+        plt.grid(True)
+
+        plot_filename = os.path.join(full_path, f'{key}.pdf')
+        # Saves the plot with a dynamic name
+        plt.savefig(plot_filename, dpi=300)
+        plt.close()  # Close the plot explicitly to free up memory
