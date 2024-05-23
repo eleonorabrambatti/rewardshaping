@@ -112,23 +112,47 @@ def main():
 
         elif bs:
             if train:
-
-                bnds = [(5, 25)]
+                #Powell scipy
+                start_time = time.time()
+                bnds = [(5, 15)]
                 initial_guess = 9
                 res = optimize.minimize(train_BS.fun, initial_guess, args=(
                     env,), method='Powell', bounds=bnds)
+                end_time = time.time()
                 print("Best s:", np.around(res.x[0]))
-
                 print("Best average reward:", -res.fun)
-                # res = optimize.minimize(train_BS.fun,np.array([10,]), args=(env,), method='Powell', bounds=bnds)
+
+                #Brute Force manual
+
+                start_time = time.time()
+                rranges = [slice(5, 15, 1)]
+                resbrute = optimize.brute(train_BS.fun, rranges, args=(
+                    env,), full_output=True, finish=None)
+
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                print(elapsed_time)
+                print(resbrute[0])
+                print(resbrute[1])
+                print(resbrute[3])
+                grid_values = resbrute[3]
+                print(grid_values.size)
+
+                #Brute force scipy
+
+                # start_time = time.time()
                 # base_stock_level, levels, rewards = train_BS.train_bs_policy(
-                #    env, 5, 25, total_timesteps)
+                #     env, 0, 15, total_timesteps)
+
+                # end_time = time.time()
+                # elapsed_time = end_time - start_time
+                # print(elapsed_time)
                 # plot.plot_rewards_per_bs_level(levels, rewards, config_details)
-                base_stock_level = np.around(res.x[0])
-                df_configurations.at[i,
-                                     'base_stock_level'] = np.around(res.x[0])
-                df_configurations.to_excel(
-                    excel_path, index=False, engine='openpyxl')
+
+                # df_configurations.at[i,
+                #                     'base_stock_level'] = base_stock_level
+                # df_configurations.to_excel(
+                #     excel_path, index=False, engine='openpyxl')
             else:
                 base_stock_level = config['base_stock_level']
             if eval:
