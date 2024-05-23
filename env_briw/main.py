@@ -23,6 +23,7 @@ sq = True
 dqn = False
 train = True
 eval = True
+# ciao
 
 
 def main():
@@ -78,21 +79,23 @@ def main():
                             n_epochs=10, clip_range=0.1, gamma=0.99, ent_coef=0.01)
                 model = DQN.load(f"./logs/ppo_model_{i}")
 
-        elif bs: 
+        elif bs:
             if train:
-                
+
                 bnds = [(5, 25)]
                 initial_guess = 9
-                res = optimize.minimize(train_BS.fun, initial_guess, args=(env,), method='Powell', bounds=bnds)
+                res = optimize.minimize(train_BS.fun, initial_guess, args=(
+                    env,), method='Powell', bounds=bnds)
                 print("Best s:", np.around(res.x[0]))
-                
+
                 print("Best average reward:", -res.fun)
-                #res = optimize.minimize(train_BS.fun,np.array([10,]), args=(env,), method='Powell', bounds=bnds)
-                #base_stock_level, levels, rewards = train_BS.train_bs_policy(
+                # res = optimize.minimize(train_BS.fun,np.array([10,]), args=(env,), method='Powell', bounds=bnds)
+                # base_stock_level, levels, rewards = train_BS.train_bs_policy(
                 #    env, 5, 25, total_timesteps)
-                #plot.plot_rewards_per_bs_level(levels, rewards, config_details)
-                base_stock_level=np.around(res.x[0])
-                df_configurations.at[i, 'base_stock_level'] = np.around(res.x[0])
+                # plot.plot_rewards_per_bs_level(levels, rewards, config_details)
+                base_stock_level = np.around(res.x[0])
+                df_configurations.at[i,
+                                     'base_stock_level'] = np.around(res.x[0])
                 df_configurations.to_excel(
                     excel_path, index=False, engine='openpyxl')
             else:
@@ -107,26 +110,27 @@ def main():
                     episodes_metrics, config_details, steps)
         elif sq:
             if train:
-                
-                
+
                 # Definiamo i limiti per s e Q
-                bnds = [(0, 10), (0, 10)]  # Cambia questi limiti in base al tuo problema
+                # Cambia questi limiti in base al tuo problema
+                bnds = [(0, 10), (0, 10)]
 
                 # Eseguiamo l'ottimizzazione
-                initial_guess = (5, 5)  # Cambia la stima iniziale in base al tuo problema
-                res = optimize.minimize(train_sQ.fun, initial_guess, args=(env,), method='Powell', bounds=bnds, )
+                # Cambia la stima iniziale in base al tuo problema
+                initial_guess = (5, 5)
+                res = optimize.minimize(train_sQ.fun, initial_guess, args=(
+                    env,), method='Powell', bounds=bnds, )
 
                 print("Best s:", res.x[0])
                 print("Best Q:", res.x[1])
                 print("Best average reward:", -res.fun)
 
-                
-                #best_s, best_Q, levels, rewards = train_sQ.train_sQ_policy(
+                # best_s, best_Q, levels, rewards = train_sQ.train_sQ_policy(
                 #    env, 5, 5, 1, 4, total_timesteps)
-                #plot.plot_rewards_per_sq_level(levels, rewards, config_details)
+                # plot.plot_rewards_per_sq_level(levels, rewards, config_details)
             else:
                 base_stock_level = config['base_stock_level']
-            #if eval:
+            # if eval:
             #    bs_class = sQ.sQpolicy(base_stock_level)
             #    avg_reward, std_reward, avg_metrics, episodes_metrics = eval_BS.evaluate_policy_and_log_detailed_metrics(
             #        env, bs_class, n_eval_episodes=20)
