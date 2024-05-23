@@ -28,9 +28,9 @@ sq = False
 
 
 train = True
-plot_train = True
-eval = True
-plot_eval = True
+plot_train = False
+eval = False
+plot_eval = False
 
 def main():
     # Load configurations from an Excel file
