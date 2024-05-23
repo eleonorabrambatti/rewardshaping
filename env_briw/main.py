@@ -19,6 +19,7 @@ import numpy as np
 from scipy.optimize import Bounds
 from scipy.optimize import show_options
 from openpyxl import load_workbook
+# Set the following flags to True to run the corresponding algorithm
 
 
 ppo = False
