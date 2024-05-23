@@ -34,7 +34,9 @@ sq = False
 
 
 train = True
-eval = True
+plot_train = False
+eval = False
+plot_eval = False
 
 
 def main():
