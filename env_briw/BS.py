@@ -1,6 +1,7 @@
 class BSpolicy:
     def __init__(self, s):
         self.base_stock_level = s
+        print(self.base_stock_level)
 
     def act(self, current_inventory_level):
         order_quantity = max(
