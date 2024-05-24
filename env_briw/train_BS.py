@@ -1,8 +1,13 @@
 import numpy as np
 from BS import BSpolicy
+import os
+import pickle
 
 
-def train_bs_policy(env, min_base_stock, max_base_stock, total_timesteps):
+def train_bs_policy(env, output_dir, min_base_stock, max_base_stock, total_timesteps):
+    subdir = 'pickle_file'
+    full_path = os.path.join(output_dir, subdir)
+    os.makedirs(full_path, exist_ok=True)
     """
     Find the optimal base stock level that maximizes rewards.
 
@@ -43,6 +48,47 @@ def train_bs_policy(env, min_base_stock, max_base_stock, total_timesteps):
         if average_reward > best_average_reward:
             best_average_reward = average_reward
             best_base_stock = base_stock_level
+    
+    filename = os.path.join(full_path, f'levels.pkl')
+    with open(filename, 'wb') as f:
+            pickle.dump(levels, f)
+    filename = os.path.join(full_path, f'avg_rewards.pkl')
+    with open(filename, 'wb') as f:
+            pickle.dump(avg_rewards, f)
+    filename = os.path.join(full_path, f'best_base_stock.pkl')
+    with open(filename, 'wb') as f:
+            pickle.dump(best_base_stock, f)
 
-    return best_base_stock, levels, avg_rewards
 
+
+def fun(x, env):
+    levels = []
+    avg_rewards = []
+    s = np.around(x)
+
+    total_reward = 0
+    num_episodes_per_level = 1000  # Numero di episodi per livello
+    # env.reset()
+    # s = np.around(s)
+    bs = BSpolicy(s)
+
+    for _ in range(num_episodes_per_level):
+        env.reset()
+        # Reset dell'ambiente per un nuovo episodio
+        # Setta il livello di base stock per questo episodio (s=s) # Imposta il livello di base stock per questo episodio
+        env.base_stock_level = s
+
+        done = False
+        while not done:
+            action = bs.act(env.total_stock)
+            _, reward, done, _ = env.step(action)
+            total_reward += reward
+
+    average_reward = total_reward / num_episodes_per_level
+    # print(f"Base Stock Level: {s}, Average Reward: {average_reward}")
+    levels.append(s)
+    avg_rewards.append(average_reward)
+    # Restituiamo il negativo perché stiamo minimizzando
+
+
+    return -average_reward
