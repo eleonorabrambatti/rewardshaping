@@ -60,15 +60,27 @@ def plot_rewards_per_bs_level(output_dir):
     plt.savefig(plot_filename, dpi=300)
 
 
-def plot_rewards_per_sq_level(levels, rewards, config_details):
+def plot_rewards_per_sq_level(output_dir):
+    subdir_levels = 'pickle_file/levels.pkl'
+    subdir_rewards = 'pickle_file/avg_rewards.pkl'
+    levels_path = os.path.join(output_dir, subdir_levels)    
+    rewards_path = os.path.join(output_dir, subdir_rewards)
+    with open(levels_path, 'rb') as file:
+        levels = pickle.load(file)
+    with open(rewards_path, 'rb') as file:
+        rewards = pickle.load(file)
+
+    subdir = 'train_graph'
+    plot_path = os.path.join(output_dir, subdir)
+    os.makedirs(plot_path, exist_ok=True)
     plt.figure(figsize=(10, 6))
     plt.plot(levels, rewards)
-    plt.xlabel('Base Stock Level')
+    plt.xlabel('sQ Level')
     plt.ylabel('Average Reward')
     # Add pad for space
-    plt.title(f'rewards per bs level - Config: {config_details}\n', pad=20)
+    plt.title(f'Reward per sQ Level\n', pad=20)
     plt.grid(True)
-    plot_filename = f'reward_per_bs_level_{config_details}.pdf'
+    plot_filename = os.path.join(plot_path, f'reward_per_sq_level.pdf')
     plt.savefig(plot_filename, dpi=300)
 
 
