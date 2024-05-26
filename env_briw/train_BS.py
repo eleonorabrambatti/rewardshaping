@@ -62,12 +62,13 @@ def train_bs_policy(env, output_dir, min_base_stock, max_base_stock, total_times
 
 
 def fun(x, env):
+    
     levels = []
     avg_rewards = []
     s = np.around(x)
 
     total_reward = 0
-    num_episodes_per_level = 1000  # Numero di episodi per livello
+    num_episodes_per_level = 1  # Numero di episodi per livello
     # env.reset()
     # s = np.around(s)
     bs = BSpolicy(s)
@@ -89,6 +90,5 @@ def fun(x, env):
     levels.append(s)
     avg_rewards.append(average_reward)
     # Restituiamo il negativo perché stiamo minimizzando
-
 
     return -average_reward
