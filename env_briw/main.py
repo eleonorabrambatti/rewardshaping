@@ -36,7 +36,7 @@ bs = False
 sq = False
 
 
-train = True
+train = False
 plot_train = True
 eval = False
 plot_eval = False
@@ -53,14 +53,14 @@ def main():
     steps = list(range(1, 11))
     for i, config in enumerate(configurations):
         config_details = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
-        output_dir=f'{config_details}'
+        output_dir = f'{config_details}'
         env = InventoryEnvGYConfig(config)
         total_timesteps = 20000
         if ppo:
 
             n_steps = 500
-            batch_size=50
-            n_epochs=10
+            batch_size = 50
+            n_epochs = 10
 
             subdir = 'ppo'
             subdir_1 = f'lr_{learning_rate}_n_steps_{n_steps}_batch_size_{batch_size}_n_epochs_{n_epochs}'
@@ -81,14 +81,14 @@ def main():
 
             if plot_eval:
                 eval_ppo.save_metrics_to_dataframe(full_path, config_details)
-                plot.plot_episodes_metrics(steps, full_path) 
+                plot.plot_episodes_metrics(steps, full_path)
 
         elif dqn:
 
-            batch_size=32
-            buffer_size=1000
-            gradient_steps=1
-            target_update_interval=1000
+            batch_size = 32
+            buffer_size = 1000
+            gradient_steps = 1
+            target_update_interval = 1000
 
             subdir = 'dqn'
             subdir_1 = f'lr_{learning_rate}_batch_size_{batch_size}_buffer_size_{buffer_size}_gradient_steps_{gradient_steps}_target_update_interval_{target_update_interval}'
@@ -124,7 +124,7 @@ def main():
             if train:
                 start_time = time.time()
 
-                
+
                 bnds = [(5, 25)]
                 initial_guess = 5
                 res = optimize.minimize(train_BS.fun, initial_guess, args=(
@@ -262,64 +262,5 @@ def main():
            
 main()
 
-
-""" 
-
-        elif bs: 
-            if train:
-                
-                bnds = [(5, 25)]
-                initial_guess = 9
-                res = optimize.minimize(train_BS.fun, initial_guess, args=(env,), method='Powell', bounds=bnds)
-                print("Best s:", np.around(res.x[0]))
-                
-                print("Best average reward:", -res.fun)
-                #res = optimize.minimize(train_BS.fun,np.array([10,]), args=(env,), method='Powell', bounds=bnds)
-                #base_stock_level, levels, rewards = train_BS.train_bs_policy(
-                #    env, 5, 25, total_timesteps)
-                #plot.plot_rewards_per_bs_level(levels, rewards, config_details)
-                base_stock_level=np.around(res.x[0])
-                df_configurations.at[i, 'base_stock_level'] = np.around(res.x[0])
-                df_configurations.to_excel(
-                    excel_path, index=False, engine='openpyxl')
-            else:
-                base_stock_level = config['base_stock_level']
-            if eval:
-                bs_class = BS.BSpolicy(base_stock_level)
-                avg_reward, std_reward, avg_metrics, episodes_metrics = eval_BS.evaluate_policy_and_log_detailed_metrics(
-                    env, bs_class, n_eval_episodes=20)
-                eval_BS.save_metrics_to_dataframe(
-                    avg_metrics, config_details, avg_reward, std_reward, filename='evaluation_metrics_bs.csv')
-                plot.plot_episodes_metrics(
-                    episodes_metrics, config_details, steps)
-        elif sq:
-            if train:
-                
-                
-                # Definiamo i limiti per s e Q
-                bnds = [(0, 10), (0, 10)]  # Cambia questi limiti in base al tuo problema
-
-                # Eseguiamo l'ottimizzazione
-                initial_guess = (5, 5)  # Cambia la stima iniziale in base al tuo problema
-                res = optimize.minimize(train_sQ.fun, initial_guess, args=(env,), method='Powell', bounds=bnds, )
-
-                print("Best s:", res.x[0])
-                print("Best Q:", res.x[1])
-                print("Best average reward:", -res.fun)
-
-                
-                #best_s, best_Q, levels, rewards = train_sQ.train_sQ_policy(
-                #    env, 5, 5, 1, 4, total_timesteps)
-                #plot.plot_rewards_per_sq_level(levels, rewards, config_details)
-            else:
-                base_stock_level = config['base_stock_level']
-            #if eval:
-            #    bs_class = sQ.sQpolicy(base_stock_level)
-            #    avg_reward, std_reward, avg_metrics, episodes_metrics = eval_BS.evaluate_policy_and_log_detailed_metrics(
-            #        env, bs_class, n_eval_episodes=20)
-            #    eval_BS.save_metrics_to_dataframe(
-            #        avg_metrics, config_details, avg_reward, std_reward, filename='evaluation_metrics_bs.csv')
-            #    plot.plot_episodes_metrics(
-            #        episodes_metrics, config_details, steps) """ 
 
 
