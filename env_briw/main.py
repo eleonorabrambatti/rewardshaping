@@ -22,12 +22,13 @@ import numpy as np
 from scipy.optimize import Bounds
 from scipy.optimize import show_options
 from openpyxl import load_workbook
+import json
 
 # Set the following flags to True to run the corresponding algorithm
 
 import scipy.optimize as optimize
 import numpy as np
-from scipy.optimize import Bounds
+
 
 
 
@@ -49,10 +50,14 @@ brute_force_manual = False
 def main():
     # Load configurations from an Excel file
     excel_path = r'../rewardshaping/configurations.xlsx'
+    config_json_path = r'../rewardshaping/config.json'
     df_configurations = pd.read_excel(excel_path, engine='openpyxl')
     configurations = df_configurations.to_dict('records')
     workbook = openpyxl.load_workbook(excel_path)
     sheet = workbook.active
+        # Leggere il file di configurazione JSON
+    with open(config_json_path, 'r') as file:
+        json_config = json.load(file)
 
     # Adjust policy_kwargs and learning rate if needed
     learning_rate = 1e-4
@@ -60,7 +65,7 @@ def main():
     for i, config in enumerate(configurations):
         config_details = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
         output_dir = f'{config_details}'
-        env = InventoryEnvGYConfig(config)
+        env = InventoryEnvGYConfig(config,json_config)
         total_timesteps = 200000
         if ppo:
 
@@ -134,6 +139,7 @@ def main():
                 start_time = time.time()
 
                 if powell:
+                    np.random.seed(42)
                     bnds = [(5, 25)]
                     initial_guess = 5
                     res = optimize.minimize(train_BS.fun, initial_guess, args=(
