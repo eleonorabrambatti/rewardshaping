@@ -114,7 +114,7 @@ class InventoryEnvGYConfig(gym.Env):
             'orders': order_quantity,
             'reward': reward,  # Include current step's reward
             # Calculate and include the standard deviation of rewards up to the current step
-            'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
+            #'rewards_std': np.std(self.rewards_history) if self.rewards_history else
         }
         #print(info)
         # if self.current_step < 2:
@@ -235,7 +235,7 @@ class InventoryEnvGYConfig(gym.Env):
             'orders': action_true,
             'reward': reward,  # Include current step's reward
             # Calculate and include the standard deviation of rewards up to the current step
-            'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
+            #'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
         }
         #print(info)
 

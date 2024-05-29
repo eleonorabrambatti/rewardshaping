@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import openpyxl
 from env import InventoryEnvGYConfig
 import train_ppo
 import train_BS
@@ -31,21 +32,27 @@ from scipy.optimize import Bounds
 
 
 ppo = False
-dqn = True
-bs = False
+dqn = False
+bs = True
 sq = False
 
 
 train = True
-plot_train = True
-eval = True
-plot_eval = True
+plot_train = False
+eval = False
+plot_eval = False
+
+powell = True
+brute_force_scipy = False
+brute_force_manual = False
 
 def main():
     # Load configurations from an Excel file
     excel_path = r'../rewardshaping/configurations.xlsx'
     df_configurations = pd.read_excel(excel_path, engine='openpyxl')
     configurations = df_configurations.to_dict('records')
+    workbook = openpyxl.load_workbook(excel_path)
+    sheet = workbook.active
 
     # Adjust policy_kwargs and learning rate if needed
     learning_rate = 1e-4
@@ -114,83 +121,84 @@ def main():
             subdir = 'bs'
             full_path = os.path.join(output_dir, subdir)
             os.makedirs(full_path, exist_ok=True)
-
-            bs_path = os.path.join(full_path, 'powell')
-            #bs_path = os.path.join(full_path, 'brute_force_scipy')
-            #bs_path = os.path.join(full_path, 'brute_force_manual')
+            if powell:
+                bs_path = os.path.join(full_path, 'powell')
+            if brute_force_scipy:
+                bs_path = os.path.join(full_path, 'brute_force_scipy')
+            if brute_force_manual:
+                bs_path = os.path.join(full_path, 'brute_force_manual')
             os.makedirs(bs_path, exist_ok=True)
             
+            base_stock_level_column = None
             if train:
                 start_time = time.time()
 
+                if powell:
+                    bnds = [(5, 25)]
+                    initial_guess = 5
+                    res = optimize.minimize(train_BS.fun, initial_guess, args=(
+                        env,), method='Powell', bounds=bnds, tol=0.00001)
+                    
+                    print("res:", np.around(res.x))
+                    print("Best s:", np.around(res.x[0]))
+                    print("Best average reward:", -res.fun)
+            
+                    full_path = os.path.join(bs_path, 'pickle_file')
+                    os.makedirs(full_path, exist_ok=True)
+                    filename = os.path.join(full_path, f'best_base_stock.pkl')
+                    with open(filename, 'wb') as f:
+                            pickle.dump(res.x[0], f)
 
-                bnds = [(5, 25)]
-                initial_guess = 5
-                res = optimize.minimize(train_BS.fun, initial_guess, args=(
-                    env,), method='Powell', bounds=bnds, tol=0.00001)
-                end_time = time.time()
+                    for cell in sheet[1]:  # Assumendo che i titoli siano nella prima riga
+                        if cell.value == 'base_stock_level':
+                            base_stock_level_column = cell.column
+                            break
 
-                elapsed_time = end_time - start_time
-                print(elapsed_time)
-                print("res:", np.around(res.x))
-                print("Best s:", np.around(res.x[0]))
-                print("Best average reward:", -res.fun)
-                """
-                subdir = 'pickle_file_bs'
-                levels_path = os.path.join(subdir, f'levels.pkl')    
-                rewards_path = os.path.join(subdir, f'avg_rewards.pkl')
-                with open(levels_path, 'rb') as file:
-                    levels = pickle.load(file)
-                with open(rewards_path, 'rb') as file:
-                    rewards = pickle.load(file)
-
-                full_path = os.path.join(bs_path, 'pickle_file')
-                os.makedirs(full_path, exist_ok=True)
-                filename = os.path.join(full_path, f'levels.pkl')
-                with open(filename, 'wb') as f:
-                    pickle.dump(levels, f)
-                filename = os.path.join(full_path, f'avg_rewards.pkl')
-                with open(filename, 'wb') as f:
-                        pickle.dump(rewards, f)"""
-                full_path = os.path.join(bs_path, 'pickle_file')
-                os.makedirs(full_path, exist_ok=True)
-                filename = os.path.join(full_path, f'best_base_stock.pkl')
-                with open(filename, 'wb') as f:
-                        pickle.dump(res.x[0], f)
-
-
-
-                """ rranges = [slice(5, 15, 1)]
-                resbrute = optimize.brute(train_BS.fun, rranges, args=(
-                    env,), full_output=True, finish=None)
-
-                end_time = time.time()
-                elapsed_time = end_time - start_time
-                print(elapsed_time)
-                print(resbrute[0])
-                print(resbrute[1])
-                print(resbrute[3])
-                grid_values = resbrute[3]
-                print(grid_values.size)
-
-                full_path = os.path.join(bs_path, 'pickle_file')
-                os.makedirs(full_path, exist_ok=True)
-                filename = os.path.join(full_path, f'levels.pkl')
-                with open(filename, 'wb') as f:
-                    pickle.dump(list(range(5, 15)), f)
-                filename = os.path.join(full_path, f'avg_rewards.pkl')
-                with open(filename, 'wb') as f:
-                        pickle.dump(-resbrute[3], f)
-                filename = os.path.join(full_path, f'best_base_stock.pkl')
-                with open(filename, 'wb') as f:
-                        pickle.dump(resbrute[0], f) """
+                    if base_stock_level_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        base_stock_level_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=base_stock_level_column, value='base_stock_level')
                 
+                    
+                    sheet.cell(row=i+2, column=base_stock_level_column, value=np.around(res.x[0]))
 
-                #train_BS.train_bs_policy(
-                #     env, bs_path, 5, 25, total_timesteps)
-                #end_time = time.time()
-                #elapsed_time = end_time - start_time
-                #print(elapsed_time)
+                    # Salva il file
+                    workbook.save(excel_path)
+
+
+                if brute_force_scipy:
+                    rranges = [slice(5, 15, 1)]
+                    resbrute = optimize.brute(train_BS.fun, rranges, args=(
+                        env,), full_output=True, finish=None)
+
+                    end_time = time.time()
+                    elapsed_time = end_time - start_time
+                    print(elapsed_time)
+                    print(resbrute[0])
+                    print(resbrute[1])
+                    print(resbrute[3])
+                    grid_values = resbrute[3]
+                    print(grid_values.size)
+
+                    full_path = os.path.join(bs_path, 'pickle_file')
+                    os.makedirs(full_path, exist_ok=True)
+                    filename = os.path.join(full_path, f'levels.pkl')
+                    with open(filename, 'wb') as f:
+                        pickle.dump(list(range(5, 15)), f)
+                    filename = os.path.join(full_path, f'avg_rewards.pkl')
+                    with open(filename, 'wb') as f:
+                            pickle.dump(-resbrute[3], f)
+                    filename = os.path.join(full_path, f'best_base_stock.pkl')
+                    with open(filename, 'wb') as f:
+                            pickle.dump(resbrute[0], f)
+                
+                if brute_force_manual:
+                    train_BS.train_bs_policy(env, bs_path, 5, 25, total_timesteps)
+
+                end_time = time.time()
+
+                elapsed_time = end_time - start_time
+                print(elapsed_time)
 
 
             if plot_train:
@@ -212,9 +220,11 @@ def main():
             full_path = os.path.join(output_dir, subdir)
             os.makedirs(full_path, exist_ok=True)
 
-            #sq_path = os.path.join(full_path, 'powell')
+            if powell:
+                sq_path = os.path.join(full_path, 'powell')
             #sq_path = os.path.join(full_path, 'brute_force_scipy')
-            sq_path = os.path.join(full_path, 'brute_force_manual')
+            if brute_force_manual:
+                sq_path = os.path.join(full_path, 'brute_force_manual')
             os.makedirs(sq_path, exist_ok=True)
             if train:
 
@@ -242,7 +252,8 @@ def main():
                         pickle.dump(res.x[1], f) """
 
                 env.seed(42)
-                train_sQ.train_sQ_policy(env, 0, 10, 0, 10, sq_path, total_timesteps)
+                if brute_force_manual:
+                    train_sQ.train_sQ_policy(env, 0, 10, 0, 10, sq_path, total_timesteps)
 
             if plot_train:
                 plot.plot_rewards_per_sq_level(sq_path)
