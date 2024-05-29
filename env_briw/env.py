@@ -4,7 +4,7 @@ from gym import spaces
 
 
 class InventoryEnvGYConfig(gym.Env):
-    def __init__(self, config):
+    def __init__(self, config, json_config):
         super(InventoryEnvGYConfig, self).__init__()
         # Action and observation spaces
         self.action_space = spaces.Discrete(7)
@@ -31,9 +31,9 @@ class InventoryEnvGYConfig(gym.Env):
         self.scale = self.mean_demand / self.shape
         #self.base_stock_level = config['base_stock_level']
 
-        self.shaped = False
-        self.reward_shaping_rewards = False
-        self.reward_shaping_actions = False
+        #self.shaped = json_config['shaped']
+        self.reward_shaping_rewards = json_config['reward_shaping_rewards']
+        self.reward_shaping_actions = json_config['reward_shaping_actions']
 
 
 
@@ -48,8 +48,8 @@ class InventoryEnvGYConfig(gym.Env):
         self.total_stock = 0  # Initialize total stock for observation
         self.rewards_history = []  # Clear rewards history for the new episode
         self.demand_history = 0
-        if self.shaped:
-            self.prev_val=0
+        
+        self.prev_val=0
         self.Rep = 0.0
         self.Rep_u = float("-inf")
         self.Rep_l = float("inf")
@@ -152,14 +152,6 @@ class InventoryEnvGYConfig(gym.Env):
                 self.stock[i] -= taken
                 lost_demand -= taken
 
-        if self.shaped:
-            stock_bs = self.stock
-            if self.reward_shaping_rewards:
-                reward_bs = self.calculate_reward_bs(
-                    self.base_stock_level, stock_bs)
-            elif self.reward_shaping_actions:
-                action_bs = self.calculate_action_bs(
-                    self.base_stock_level, stock_bs)
 
       # Calculate rewards and metrics
         lost_sales = max(0, lost_demand)
@@ -177,48 +169,17 @@ class InventoryEnvGYConfig(gym.Env):
 
         #print(f'reward: {reward}')
         #Aggiornamento rep, repu e repl
-        self.Rep = self.Rep + reward
-        #print(f'rep: {self.Rep}')
-        if reward > self.Rep_u:
-            self.Rep_u = reward
-        #print(f'rep_u: {self.Rep_u}')
-        if reward < self.Rep_l:
-            self.Rep_l = reward
-        #print(f'rep_l: {self.Rep_l}')
+                #if self.shaped:
+        
+        if self.reward_shaping_rewards:
+            reward = self.calculate_reward(self,reward)
+        
+        elif self.reward_shaping_actions:
+            reward = self.calculate_action_bs(
+                self.base_stock_level, self.stock,reward,order_quantity)
+        
 
-        if self.shaped:
-            if self.reward_shaping_rewards:
-                #coefficient = 5
-                #print(f'reward_bs: {reward_bs}')
-                #print(f'reward: {reward}')
-                #print(f'diff rewardss: {abs(reward_bs - reward)}')
 
-                        # Calcola cur_val basato sulla condizione fornita
-                if reward == 0:
-                    cur_val = 0
-                else:
-                    if self.Rep_u != self.Rep_l:  # Evita divisioni per zero
-                        cur_val = 1 + ((self.Rep - self.Rep_u) / (self.Rep_u - self.Rep_l))
-                        #print(f'cur_val: {cur_val}')
-                    else:
-                        cur_val = 1  # Se Rep_u e Rep_l sono uguali, imposta cur_val a 1
-
-                
-                #cur_val = -coefficient * abs(reward_bs - reward)
-
-                F = cur_val - ((1/0.99) * self.prev_val)
-                self.prev_val = cur_val
-                reward += F
-            if self.reward_shaping_actions:
-                coefficient = 5
-                print(f'action_bs: {action_bs}')
-                print(f'order_quantity: {order_quantity}')
-                print(f'diff actions: {abs(action_bs - order_quantity)}')
-                cur_val = -coefficient * abs(action_bs - order_quantity)
-
-                F = cur_val - ((1/0.99) * self.prev_val)
-                self.prev_val = cur_val
-                reward += F
         #print(f'reward shaped: {reward}')
         # Update the stock for the next period
         self.stock = np.roll(self.stock, -1)
@@ -257,33 +218,42 @@ class InventoryEnvGYConfig(gym.Env):
             print(f"Initial Demand: {self.demand}")
             # Include additional print statements as needed for debugging or information purposes.
 
-    def calculate_reward_bs(self, base_stock, stock_bs):
-        total_stock_bs = np.sum(stock_bs[:self.m])
-        order_quantity = max(0, base_stock - total_stock_bs)
+    def calculate_reward(self, reward):
+        
 
-        # Satisfy demand
-        for i in range(min(len(stock_bs), self.m)):
-            if self.demand > 0:
-                taken = min(stock_bs[i], self.demand)
-                stock_bs[i] -= taken
-                self.demand -= taken
-
-        # Calculate rewards and metrics
-        lost_sales = max(0, self.demand)
-        expired = self.stock[0]
-
-        satisfied_demand = (self.demand - lost_sales)
-
-        reward = (self.p * (satisfied_demand)
-                  - self.c * order_quantity - self.h * (total_stock_bs)
-                  - self.b * lost_sales
-                  - self.w * (expired))
-        reward /= 100.0  # Divide the reward by 100
+        self.Rep = self.Rep + reward
+        #print(f'rep: {self.Rep}')
+        if reward > self.Rep_u:
+            self.Rep_u = reward
+        #print(f'rep_u: {self.Rep_u}')
+        if reward < self.Rep_l:
+            self.Rep_l = reward
+        #print(f'rep_l: {self.Rep_l}')
+        if reward == 0:
+                cur_val = 0
+        else:
+            if self.Rep_u != self.Rep_l:  # Evita divisioni per zero
+                cur_val = 1 + ((self.Rep - self.Rep_u) / (self.Rep_u - self.Rep_l))
+                    #print(f'cur_val: {cur_val}')
+            else:
+                cur_val = 1  # Se Rep_u e Rep_l sono uguali, imposta cur_val a 1
+            
+            #cur_val = -coefficient * abs(reward_bs - reward)
+        F = cur_val - ((1/0.99) * self.prev_val)
+        self.prev_val = cur_val
+        reward += F
 
         return reward
 
-    def calculate_action_bs(self, base_stock, stock_bs):
+    def calculate_action_bs(self, base_stock, stock_bs,reward,order_quantity):
         total_stock_bs = np.sum(stock_bs[:self.m])
-        order_quantity = max(0, base_stock - total_stock_bs)
+        order_quantity_bs = max(0, base_stock - total_stock_bs)
 
-        return order_quantity
+        coefficient=5
+        cur_val = -coefficient * abs(order_quantity_bs - order_quantity)
+
+        F = cur_val - ((1/0.99) * self.prev_val)
+        self.prev_val = cur_val
+        reward += F
+
+        return reward
