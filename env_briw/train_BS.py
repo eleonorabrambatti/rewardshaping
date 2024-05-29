@@ -68,7 +68,7 @@ def fun(x, env):
     s = np.around(x)
 
     total_reward = 0
-    num_episodes_per_level = 1  # Numero di episodi per livello
+    num_episodes_per_level = 100  # Numero di episodi per livello
     # env.reset()
     # s = np.around(s)
     bs = BSpolicy(s)
