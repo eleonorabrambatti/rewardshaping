@@ -166,6 +166,7 @@ class InventoryEnvGYConfig(gym.Env):
 
         reward /= 100.0  # Divide the reward by 100
         self.rewards_history.append(reward)  # Track the reward for each step
+
         #print(f'reward: {reward}')
         #Aggiornamento rep, repu e repl
                 #if self.shaped:
