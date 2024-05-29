@@ -33,8 +33,8 @@ from scipy.optimize import Bounds
 
 ppo = False
 dqn = False
-bs = True
-sq = False
+bs = False
+sq = True
 
 
 train = True
@@ -191,9 +191,39 @@ def main():
                     filename = os.path.join(full_path, f'best_base_stock.pkl')
                     with open(filename, 'wb') as f:
                             pickle.dump(resbrute[0], f)
+                    
+                    for cell in sheet[1]:  # Assumendo che i titoli siano nella prima riga
+                        if cell.value == 'base_stock_level':
+                            base_stock_level_column = cell.column
+                            break
+
+                    if base_stock_level_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        base_stock_level_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=base_stock_level_column, value='base_stock_level')
+                
+                    
+                    sheet.cell(row=i+2, column=base_stock_level_column, value=np.around(resbrute[0]))
+
+                    # Salva il file
+                    workbook.save(excel_path)
                 
                 if brute_force_manual:
-                    train_BS.train_bs_policy(env, bs_path, 5, 25, total_timesteps)
+                    base_stock_level = train_BS.train_bs_policy(env, bs_path, 5, 25, total_timesteps)
+
+                    for cell in sheet[1]:  # Assumendo che i titoli siano nella prima riga
+                        if cell.value == 'base_stock_level':
+                            base_stock_level_column = cell.column
+                            break
+
+                    if base_stock_level_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        base_stock_level_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=base_stock_level_column, value='base_stock_level')
+                
+                    
+                    sheet.cell(row=i+2, column=base_stock_level_column, value=base_stock_level)
+                    workbook.save(excel_path)
 
                 end_time = time.time()
 
@@ -226,34 +256,82 @@ def main():
             if brute_force_manual:
                 sq_path = os.path.join(full_path, 'brute_force_manual')
             os.makedirs(sq_path, exist_ok=True)
+
+            s_column = None
+            Q_column = None
             if train:
 
-                """ # Definiamo i limiti per s e Q
+               
+                if powell:
+                    bnds = [(0, 10), (0, 10)]
+                    # Eseguiamo l'ottimizzazione
+                    # Cambia la stima iniziale in base al tuo problema
+                    initial_guess = (5, 5)
+                    res = optimize.minimize(train_sQ.fun, initial_guess, args=(
+                        env,), method='Powell', bounds=bnds, tol=0.000001, options={'disp': True})
 
-                bnds = [(0, 10), (0, 10)]
+                    print("Best s:", np.around(res.x[0]))
+                    print("Best Q:", np.around(res.x[1]))
+                    print("Best average reward:", -res.fun)
 
-                # Eseguiamo l'ottimizzazione
-                # Cambia la stima iniziale in base al tuo problema
-                initial_guess = (5, 5)
-                res = optimize.minimize(train_sQ.fun, initial_guess, args=(
-                    env,), method='Powell', bounds=bnds, tol=0.000001, options={'disp': True})
+                    full_path = os.path.join(sq_path, 'pickle_file')
+                    os.makedirs(full_path, exist_ok=True)
+                    filename = os.path.join(full_path, f'best_s.pkl')
+                    with open(filename, 'wb') as f:
+                            pickle.dump(res.x[0], f)
+                    filename = os.path.join(full_path, f'best_Q.pkl')
+                    with open(filename, 'wb') as f:
+                            pickle.dump(res.x[1], f) 
+                    
+                    for cell in sheet[1]:  # Assumendo che i titoli siano nella prima riga
+                        if cell.value == 's':
+                            s_column = cell.column
+                            break
+                        if cell.value == 'Q':
+                            Q_column = cell.column
+                            break
 
-                print("Best s:", np.around(res.x[0]))
-                print("Best Q:", np.around(res.x[1]))
-                print("Best average reward:", -res.fun)
+                    if s_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        s_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=s_column, value='s')
+                    if Q_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        Q_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=Q_column, value='Q')
+                
+                    
+                    sheet.cell(row=i+2, column=s_column, value=np.around(res.x[0]))
+                    sheet.cell(row=i+2, column=Q_column, value=np.around(res.x[1]))
+                    workbook.save(excel_path)
 
-                full_path = os.path.join(sq_path, 'pickle_file')
-                os.makedirs(full_path, exist_ok=True)
-                filename = os.path.join(full_path, f'best_s.pkl')
-                with open(filename, 'wb') as f:
-                        pickle.dump(res.x[0], f)
-                filename = os.path.join(full_path, f'best_Q.pkl')
-                with open(filename, 'wb') as f:
-                        pickle.dump(res.x[1], f) """
 
-                env.seed(42)
+
                 if brute_force_manual:
-                    train_sQ.train_sQ_policy(env, 0, 10, 0, 10, sq_path, total_timesteps)
+                    best_s, best_Q = train_sQ.train_sQ_policy(env, 0, 10, 0, 10, sq_path, total_timesteps)
+
+                    for cell in sheet[1]:  # Assumendo che i titoli siano nella prima riga
+                        if cell.value == 's':
+                            s_column = cell.column
+                            break
+                        if cell.value == 'Q':
+                            Q_column = cell.column
+                            break
+
+                    if s_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        s_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=s_column, value='s')
+                    if Q_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        Q_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=Q_column, value='Q')
+                
+                    
+                    sheet.cell(row=i+2, column=s_column, value=best_s)
+                    sheet.cell(row=i+2, column=Q_column, value=best_Q)
+
+                    workbook.save(excel_path)
 
             if plot_train:
                 plot.plot_rewards_per_sq_level(sq_path)

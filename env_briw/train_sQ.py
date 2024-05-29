@@ -66,6 +66,7 @@ def train_sQ_policy(env, min_s, max_s, min_Q, max_Q, output_dir, num_episodes_pe
     filename = os.path.join(full_path, f'best_Q.pkl')
     with open(filename, 'wb') as f:
             pickle.dump(best_Q, f)
+    return best_s, best_Q
 
 
 def fun(x, env):
@@ -75,7 +76,7 @@ def fun(x, env):
     # s = np.around(s)
     # q = np.around(q)
     total_reward = 0
-    num_episodes_per_level = 1000  # Numero di episodi per livello
+    num_episodes_per_level = 10  # Numero di episodi per livello
     # env.reset()
     sq = sQpolicy(s, q)
     env.s = s

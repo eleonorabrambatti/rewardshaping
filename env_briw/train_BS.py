@@ -58,6 +58,7 @@ def train_bs_policy(env, output_dir, min_base_stock, max_base_stock, total_times
     filename = os.path.join(full_path, f'best_base_stock.pkl')
     with open(filename, 'wb') as f:
             pickle.dump(best_base_stock, f)
+    return base_stock_level        
 
 
 
