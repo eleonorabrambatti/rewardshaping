@@ -7,13 +7,14 @@ class InventoryEnvGYConfig(gym.Env):
     def __init__(self, config):
         super(InventoryEnvGYConfig, self).__init__()
         # Action and observation spaces
-        self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.Discrete(7)
         # self.action_space = spaces.Box(low=np.array(
         #    [0]), high=np.array([3]), dtype=np.float32)
         observation_length = (config['m'] + config['L'] - 1) + 2
         self.observation_space = spaces.Box(
             low=0, high=100, shape=(observation_length,), dtype=np.float32)
         self.rewards_history = []  # Initialize a list to track rewards
+        self.demand_history = 0
 
         # Inventory management parameters from config
         self.m = config['m']
@@ -28,11 +29,14 @@ class InventoryEnvGYConfig(gym.Env):
         self.coef_of_var = config['coef_of_var']
         self.shape = 1 / (self.coef_of_var ** 2)
         self.scale = self.mean_demand / self.shape
-        self.base_stock_level = config['base_stock_level']
+        #self.base_stock_level = config['base_stock_level']
 
-        self.shaped = True
+        self.shaped = False
         self.reward_shaping_rewards = False
-        self.reward_shaping_actions = True
+        self.reward_shaping_actions = False
+
+
+
 
         # Ensure all other necessary initializations are performed here
         self.reset()
@@ -43,8 +47,12 @@ class InventoryEnvGYConfig(gym.Env):
         self.demand = 0  # Initialize demands for observation
         self.total_stock = 0  # Initialize total stock for observation
         self.rewards_history = []  # Clear rewards history for the new episode
+        self.demand_history = 0
         if self.shaped:
             self.prev_val=0
+        self.Rep = 0.0
+        self.Rep_u = float("-inf")
+        self.Rep_l = float("inf")
         return self._next_observation()
 
     def _next_observation(self):
@@ -63,12 +71,11 @@ class InventoryEnvGYConfig(gym.Env):
         # Generate total demand
         self.demand = np.round(np.random.gamma(
             self.shape, self.scale)).astype(int)
-
-        if self.current_step < self.L:
+        #if self.current_step < self.L:
             # if order_quantity != 3:
             #    print(f'order_quantity: {order_quantity}')
-            self.demand = 0
-
+        #    self.demand = 0
+        self.demand_history = self.demand
         lost_demand = self.demand
         # Satisfy  demand
         for i in range(min(len(self.stock), self.m)):
@@ -98,7 +105,7 @@ class InventoryEnvGYConfig(gym.Env):
 
         # Calculate metrics for the items
         info = {
-            'demand': self.demand,
+            'demand': self.demand_history,
             'stock': np.sum(self.stock[:self.m]),
             'in_transit': np.sum(self.stock[-self.L:]),  # in transit
             'expired_items': expired,
@@ -118,14 +125,20 @@ class InventoryEnvGYConfig(gym.Env):
         return self._next_observation(), reward, done, info
     
     def step(self, action):
-
-        print('qui entro')
+        print(f' current step: {self.current_step}')
+        action_true = np.around(action).astype(int)
+        #print('qui entro')
 
         order_quantity = np.around(action).astype(int)
+        if self.current_step > 9-self.L:
+            # if order_quantity != 3:
+            #    print(f'order_quantity: {order_quantity}')
+            order_quantity = 0
+        print(f'order quantity: {order_quantity}')
         # Generate total demand
         self.demand = np.round(np.random.gamma(
             self.shape, self.scale)).astype(int)
-
+        self.demand_history=self.demand
         if self.current_step < self.L:
             # if order_quantity != 3:
             #    print(f'order_quantity: {order_quantity}')
@@ -161,14 +174,36 @@ class InventoryEnvGYConfig(gym.Env):
 
         reward /= 100.0  # Divide the reward by 100
         self.rewards_history.append(reward)  # Track the reward for each step
-        print(f'reward: {reward}')
+        #print(f'reward: {reward}')
+        #Aggiornamento rep, repu e repl
+        self.Rep = self.Rep + reward
+        #print(f'rep: {self.Rep}')
+        if reward > self.Rep_u:
+            self.Rep_u = reward
+        #print(f'rep_u: {self.Rep_u}')
+        if reward < self.Rep_l:
+            self.Rep_l = reward
+        #print(f'rep_l: {self.Rep_l}')
+
         if self.shaped:
             if self.reward_shaping_rewards:
-                coefficient = 5
-                print(f'reward_bs: {reward_bs}')
-                print(f'reward: {reward}')
-                print(f'diff rewardss: {abs(reward_bs - reward)}')
-                cur_val = -coefficient * abs(reward_bs - reward)
+                #coefficient = 5
+                #print(f'reward_bs: {reward_bs}')
+                #print(f'reward: {reward}')
+                #print(f'diff rewardss: {abs(reward_bs - reward)}')
+
+                        # Calcola cur_val basato sulla condizione fornita
+                if reward == 0:
+                    cur_val = 0
+                else:
+                    if self.Rep_u != self.Rep_l:  # Evita divisioni per zero
+                        cur_val = 1 + ((self.Rep - self.Rep_u) / (self.Rep_u - self.Rep_l))
+                        #print(f'cur_val: {cur_val}')
+                    else:
+                        cur_val = 1  # Se Rep_u e Rep_l sono uguali, imposta cur_val a 1
+
+                
+                #cur_val = -coefficient * abs(reward_bs - reward)
 
                 F = cur_val - ((1/0.99) * self.prev_val)
                 self.prev_val = cur_val
@@ -183,7 +218,7 @@ class InventoryEnvGYConfig(gym.Env):
                 F = cur_val - ((1/0.99) * self.prev_val)
                 self.prev_val = cur_val
                 reward += F
-        print(f'reward shaped: {reward}')
+        #print(f'reward shaped: {reward}')
         # Update the stock for the next period
         self.stock = np.roll(self.stock, -1)
         self.stock[-1] = order_quantity  # Add new order at the end
@@ -191,24 +226,25 @@ class InventoryEnvGYConfig(gym.Env):
 
         # Calculate metrics for the items
         info = {
-            'demand': self.demand,
+            'demand': self.demand_history,
             'stock': np.sum(self.stock[:self.m]),
             'in_transit': np.sum(self.stock[-self.L:]),  # in transit
             'expired_items': expired,
             'lost_sales': lost_sales,
             'satisfied_demand': satisfied_demand,
-            'orders': order_quantity,
+            'orders': action_true,
             'reward': reward,  # Include current step's reward
             # Calculate and include the standard deviation of rewards up to the current step
             'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
         }
-        print(info)
+        #print(info)
 
         self.current_step += 1
-        print('qui arrivo')
+        #print(f'current_step: {self.current_step}')
+        #print('qui arrivo')
         # End episode after 10 steps or define your own condition
         done = self.current_step >= 10
-        print('qui arrivo 1')
+        #print('qui arrivo 1')
         # Return step's observation, reward, done, and info
 
         return self._next_observation(), reward, done, info

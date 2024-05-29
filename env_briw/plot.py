@@ -91,24 +91,40 @@ def plot_episodes_metrics(steps, output_dir):
     subdir = 'eval_graph'
     full_path = os.path.join(output_dir, subdir)
     os.makedirs(full_path, exist_ok=True)
-    keys = ['demand', 'expired_items', 'stock', 'in_transit', 'lost_sales', 'satisfied_demand', 'orders', 'average_reward']
+    keys = ['demand', 'expired_items', 'stock', 'in_transit', 'lost_sales', 'satisfied_demand', 'orders', 'reward']
+    graph_label_y = {'demand': 'Average Demand', 
+                   'expired_items': 'Average Expired Items',
+                    'stock': 'Average Stock',
+                    'in_transit': 'Average In Transit Items', 
+                    'lost_sales': 'Average Lost Sales',
+                    'satisfied_demand': 'Average Satisfied Demand',
+                    'orders': 'Average Orders',
+                    'reward': 'Average Reward'}
+    graph_label_title = {'demand': 'Average Demand per Step', 
+                   'expired_items': 'Average Expired Items per Step',
+                    'stock': 'Average Stock per Step',
+                    'in_transit': 'Average In Transit Items per Step', 
+                    'lost_sales': 'Average Lost Sales per Step',
+                    'satisfied_demand': 'Average Satisfied Demand per Step',
+                    'orders': 'Average Orders per Step',
+                    'reward': 'Average Reward per Step'}
 
-    for key in keys:
+    fig, axs = plt.subplots(8, 1, figsize=(9, 6*5))
+    colors = ['red', 'orange', 'yellow','green', 'blue', 'purple', 'pink','brown']
+    for i, key in enumerate(keys):
         path = os.path.join(components_path, f'{key}.pkl')
         with open(path, 'rb') as file:
             metric = pickle.load(file)
-    
-        plt.figure(figsize=(10, 6))
-        plt.plot(steps, np.array(metric))
-        # plt.fill_between(episodes, np.array(episode_metrics[key]) - np.array(episode_metrics[key]).std(axis=1), np.array(episode_metrics[key]).mean(axis=1) + np.array(episode_metrics[key]).std(axis=1), alpha=0.3)
-        plt.xlabel('Steps')
-        plt.ylabel(f'{key}')
-
-        plt.title(f'{key}\n', pad=20)  # Add pad for space
-
-        plt.grid(True)
-
-        plot_filename = os.path.join(full_path, f'{key}.pdf')
-        # Saves the plot with a dynamic name
-        plt.savefig(plot_filename, dpi=300)
-        plt.close()  # Close the plot explicitly to free up memory
+        path_std = os.path.join(components_path, f'{key}_std.pkl')
+        with open(path_std, 'rb') as file:
+            metric_std = pickle.load(file)
+        axs[i].plot(steps, np.array(metric), color=colors[i % len(colors)])
+        axs[i].fill_between(steps, np.array(metric) - np.array(metric_std), np.array(metric) + np.array(metric_std), alpha=0.3, color=colors[i % len(colors)])
+        axs[i].set_xlabel('Steps')
+        axs[i].set_ylabel(f'{graph_label_y.get(key,0)}')
+        axs[i].set_title(f'{graph_label_title.get(key,0)}\n', pad=5)  # Add pad for space
+        axs[i].grid(True)
+    plt.subplots_adjust(hspace=0.5)  # Add this line to adjust the vertical spacing between subplots
+    plot_filename = os.path.join(full_path, 'metrics_subplot.pdf')
+    plt.savefig(plot_filename, dpi=300)
+    plt.close(fig)  # Close the plot explicitly to free up memory

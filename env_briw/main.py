@@ -30,32 +30,31 @@ from scipy.optimize import Bounds
 
 
 
-ppo = True
-dqn = False
+ppo = False
+dqn = True
 bs = False
 sq = False
 
 
-train = False
+train = True
 plot_train = True
-eval = False
-plot_eval = False
+eval = True
+plot_eval = True
 
 def main():
     # Load configurations from an Excel file
-    excel_path = r'../rewardshaping/configurations_ppo.xlsx'
+    excel_path = r'../rewardshaping/configurations.xlsx'
     df_configurations = pd.read_excel(excel_path, engine='openpyxl')
     configurations = df_configurations.to_dict('records')
 
     # Adjust policy_kwargs and learning rate if needed
-    policy_kwargs = dict(net_arch=[dict(pi=[32, 32], vf=[32, 32])])
     learning_rate = 1e-4
     steps = list(range(1, 11))
     for i, config in enumerate(configurations):
         config_details = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
         output_dir = f'{config_details}'
         env = InventoryEnvGYConfig(config)
-        total_timesteps = 20000
+        total_timesteps = 200000
         if ppo:
 
             n_steps = 500
@@ -77,7 +76,7 @@ def main():
                 model_path = os.path.join(full_path, f"./logs/ppo_model")
 
                 model = PPO.load(model_path)
-                eval_ppo.evaluate_policy_and_log_detailed_metrics(model, env, full_path, n_eval_episodes=20)
+                eval_ppo.evaluate_policy_and_log_detailed_metrics(model, env, full_path, n_eval_episodes=5)
 
             if plot_eval:
                 eval_ppo.save_metrics_to_dataframe(full_path, config_details)
@@ -105,7 +104,7 @@ def main():
                 model_path = os.path.join(full_path, f"./logs/dqn_model")
 
                 model = DQN.load(model_path)
-                eval_dqn.evaluate_policy_and_log_detailed_metrics(model, env, full_path, n_eval_episodes=20)
+                eval_dqn.evaluate_policy_and_log_detailed_metrics(model, env, full_path, n_eval_episodes=5)
 
             if plot_eval:
                 eval_dqn.save_metrics_to_dataframe(full_path, config_details)

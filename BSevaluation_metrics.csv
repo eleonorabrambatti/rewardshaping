@@ -1,3 +1,0 @@
-expired_green,expired_yellow,stock_green,stock_yellow,lost_sales_green,lost_sales_yellow,satisfied_green,satisfied_yellow,base_stock_level,average_reward,reward_std,config_details
-0.0,0.0,0.6999999999999998,0.0,2.7000000000000006,0.0,0.29999999999999993,0.0,1.0,-270000.0,0.0,m_3_L_2_Alpha_0_beta_0_p1_0_p2_0_c_0_h_1_b1_1000000_b2_0_w_3_mean_demand_3_coef_of_var_1e-06
-0.0,0.0,0.6999999999999998,0.0,2.7000000000000006,0.0,0.29999999999999993,0.0,1.0,-2.7000000000000006,4.440892098500626e-16,m_4_L_2_Alpha_0_beta_0_p1_0_p2_0_c_0_h_1_b1_10_b2_0_w_2_mean_demand_3_coef_of_var_1e-11

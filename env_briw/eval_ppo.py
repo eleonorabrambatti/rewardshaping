@@ -17,8 +17,8 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
        'lost_sales': [],
        'satisfied_demand': [],
        'orders': [],
-       'average_reward': [],
-       'reward_std': [],
+       'reward': [],
+       'rewards_std': [],
     }
     episodes = {key: [] for key in metrics}
     for episode in range(n_eval_episodes):
