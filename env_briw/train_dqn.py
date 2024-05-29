@@ -10,7 +10,8 @@ def train_dqn_model(env, learning_rate, total_timesteps, output_dir, batch_size,
 
     env.seed(42)  # Setting environment seed
 
-    model = DQN('MlpPolicy', env, learning_rate=learning_rate, batch_size=batch_size, buffer_size=buffer_size, gradient_steps=gradient_steps,target_update_interval=target_update_interval)
+    model = DQN('MlpPolicy', env, learning_rate=learning_rate, batch_size=batch_size, buffer_size=buffer_size, gradient_steps=gradient_steps,target_update_interval=target_update_interval,
+                exploration_final_eps=0.05)
     # Callbacks setup
     eval_callback = EvalCallback(env, best_model_save_path=f'./{output_dir}/logs/', log_path=f'./{output_dir}/logs/', eval_freq=1000,
                                  deterministic=False, render=False)
