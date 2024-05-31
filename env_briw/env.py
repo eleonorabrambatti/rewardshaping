@@ -7,9 +7,9 @@ class InventoryEnvGYConfig(gym.Env):
     def __init__(self, config, json_config):
         super(InventoryEnvGYConfig, self).__init__()
         # Action and observation spaces
-        self.action_space = spaces.Discrete(7)
-        # self.action_space = spaces.Box(low=np.array(
-        #    [0]), high=np.array([3]), dtype=np.float32)
+        #self.action_space = spaces.Discrete(7)
+        self.action_space = spaces.Box(low=np.array(
+            [0]), high=np.array([9]), dtype=np.float32)
         observation_length = (config['m'] + config['L'] - 1) + 2
         self.observation_space = spaces.Box(
             low=0, high=100, shape=(observation_length,), dtype=np.float32)
@@ -125,7 +125,7 @@ class InventoryEnvGYConfig(gym.Env):
         return self._next_observation(), reward, done, info
     
     def step(self, action):
-        print(f' current step: {self.current_step}')
+        
         action_true = np.around(action).astype(int)
         #print('qui entro')
 
@@ -134,10 +134,16 @@ class InventoryEnvGYConfig(gym.Env):
             # if order_quantity != 3:
             #    print(f'order_quantity: {order_quantity}')
             order_quantity = 0
-        print(f'order quantity: {order_quantity}')
+        #print(f'order quantity: {order_quantity}')
         # Generate total demand
-        self.demand = np.round(np.random.gamma(
-            self.shape, self.scale)).astype(int)
+        #self.demand = np.round(np.random.gamma(
+        #    self.shape, self.scale)).astype(int)
+        # Genera 1000 valori di domanda utilizzando la distribuzione gamma
+        demand_values = np.round(np.random.gamma(self.shape, self.scale, 1000)).astype(int)
+
+        # Trova il valore massimo della domanda
+        max_demand = np.max(demand_values)
+        #print(f'demand: {max_demand}')
         self.demand_history=self.demand
         if self.current_step < self.L:
             # if order_quantity != 3:

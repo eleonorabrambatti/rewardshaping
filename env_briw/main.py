@@ -29,23 +29,23 @@ import json
 import scipy.optimize as optimize
 import numpy as np
 
-ppo = False
+ppo = True
 dqn = False
-bs = True
+bs = False
 sq = False
 
 train = True
 plot_train = False
 eval = True
-plot_eval = True
+plot_eval =False
 
 powell = False
 brute_force_scipy = False
-brute_force_manual = True
+brute_force_manual =False
 
 def main():
     # Load configurations from an Excel file
-    excel_path = r'../rewardshaping/configurations.xlsx'
+    excel_path = r'../rewardshaping/configurations (1).xlsx'
     config_json_path = r'../rewardshaping/config.json'
     df_configurations = pd.read_excel(excel_path, engine='openpyxl')
     configurations = df_configurations.to_dict('records')
@@ -62,7 +62,7 @@ def main():
         config_details = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
         output_dir = f'{config_details}'
         env = InventoryEnvGYConfig(config,json_config)
-        total_timesteps = 2000
+        total_timesteps = 20000
         if ppo:
 
             n_steps = 500
@@ -272,7 +272,7 @@ def main():
                     workbook.save(excel_path)
 
 
-            if plot_train:
+            if plot_train and not powell:
                 plot.plot_rewards_per_bs_level(bs_path)
             
             if eval:
@@ -442,7 +442,7 @@ def main():
 
                     workbook.save(excel_path)
 
-            if plot_train:
+            if plot_train and not powell:
                 plot.plot_rewards_per_sq_level(sq_path)
             
             if eval:
