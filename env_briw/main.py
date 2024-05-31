@@ -29,23 +29,19 @@ import json
 import scipy.optimize as optimize
 import numpy as np
 
-
-
-
 ppo = False
 dqn = False
-bs = False
-sq = True
-
+bs = True
+sq = False
 
 train = True
 plot_train = False
-eval = False
-plot_eval = False
+eval = True
+plot_eval = True
 
-powell = True
+powell = False
 brute_force_scipy = False
-brute_force_manual = False
+brute_force_manual = True
 
 def main():
     # Load configurations from an Excel file
@@ -66,7 +62,7 @@ def main():
         config_details = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
         output_dir = f'{config_details}'
         env = InventoryEnvGYConfig(config,json_config)
-        total_timesteps = 200000
+        total_timesteps = 2000
         if ppo:
 
             n_steps = 500
@@ -79,7 +75,18 @@ def main():
             os.makedirs(full_path, exist_ok=True)
             # Train and evaluate the model
             if train:
+                start_time = time.time()
                 model = train_ppo.train_ppo_model(env, learning_rate, total_timesteps, full_path, n_steps, batch_size, n_epochs)
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                print(f'time: {elapsed_time}')
+
+                pickle_path = os.path.join(full_path, 'pickle_file')
+                os.makedirs(pickle_path, exist_ok=True)
+                filename = os.path.join(pickle_path, f'time.pkl')
+                with open(filename, 'wb') as f:
+                        pickle.dump(elapsed_time, f)
+
             if plot_train:
                 train_ppo.save_logs(full_path)
                 plot.plot_reward_convergence(full_path)
@@ -107,7 +114,18 @@ def main():
             os.makedirs(full_path, exist_ok=True)
 
             if train:
+                start_time = time.time()
                 model = train_dqn.train_dqn_model(env, learning_rate, total_timesteps, full_path, batch_size, buffer_size, gradient_steps, target_update_interval)
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                print(f'time: {elapsed_time}')
+
+                pickle_path = os.path.join(full_path, 'pickle_file')
+                os.makedirs(pickle_path, exist_ok=True)
+                filename = os.path.join(pickle_path, f'time.pkl')
+                with open(filename, 'wb') as f:
+                        pickle.dump(elapsed_time, f)
+
             if plot_train:
                 train_dqn.save_logs(full_path)
                 plot.plot_reward_convergence(full_path)
@@ -145,15 +163,23 @@ def main():
                     res = optimize.minimize(train_BS.fun, initial_guess, args=(
                         env,), method='Powell', bounds=bnds, tol=0.00001)
                     
+                    end_time = time.time()
+
+                    elapsed_time = end_time - start_time
+                    print(elapsed_time)
+
                     print("res:", np.around(res.x))
                     print("Best s:", np.around(res.x[0]))
                     print("Best average reward:", -res.fun)
-            
-                    full_path = os.path.join(bs_path, 'pickle_file')
-                    os.makedirs(full_path, exist_ok=True)
-                    filename = os.path.join(full_path, f'best_base_stock.pkl')
+
+                    pickle_path = os.path.join(bs_path, 'pickle_file')
+                    os.makedirs(pickle_path, exist_ok=True)
+                    filename = os.path.join(pickle_path, f'time.pkl')
                     with open(filename, 'wb') as f:
-                            pickle.dump(res.x[0], f)
+                        pickle.dump(elapsed_time, f)
+                    filename = os.path.join(bs_path, f'best_base_stock.pkl')
+                    with open(filename, 'wb') as f:
+                        pickle.dump(res.x[0], f)
 
                     for cell in sheet[1]:  # Assumendo che i titoli siano nella prima riga
                         if cell.value == 'base_stock_level':
@@ -186,15 +212,18 @@ def main():
                     grid_values = resbrute[3]
                     print(grid_values.size)
 
-                    full_path = os.path.join(bs_path, 'pickle_file')
-                    os.makedirs(full_path, exist_ok=True)
-                    filename = os.path.join(full_path, f'levels.pkl')
+                    pickle_path = os.path.join(bs_path, 'pickle_file')
+                    os.makedirs(pickle_path, exist_ok=True)
+                    filename = os.path.join(pickle_path, f'time.pkl')
+                    with open(filename, 'wb') as f:
+                        pickle.dump(elapsed_time, f)
+                    filename = os.path.join(pickle_path, f'levels.pkl')
                     with open(filename, 'wb') as f:
                         pickle.dump(list(range(5, 15)), f)
-                    filename = os.path.join(full_path, f'avg_rewards.pkl')
+                    filename = os.path.join(pickle_path, f'avg_rewards.pkl')
                     with open(filename, 'wb') as f:
                             pickle.dump(-resbrute[3], f)
-                    filename = os.path.join(full_path, f'best_base_stock.pkl')
+                    filename = os.path.join(pickle_path, f'best_base_stock.pkl')
                     with open(filename, 'wb') as f:
                             pickle.dump(resbrute[0], f)
                     
@@ -217,6 +246,17 @@ def main():
                 if brute_force_manual:
                     base_stock_level = train_BS.train_bs_policy(env, bs_path, 5, 25, total_timesteps)
 
+                    end_time = time.time()
+
+                    elapsed_time = end_time - start_time
+                    print(elapsed_time)
+
+                    pickle_path = os.path.join(bs_path, 'pickle_file')
+                    os.makedirs(pickle_path, exist_ok=True)
+                    filename = os.path.join(pickle_path, f'time.pkl')
+                    with open(filename, 'wb') as f:
+                        pickle.dump(elapsed_time, f)
+
                     for cell in sheet[1]:  # Assumendo che i titoli siano nella prima riga
                         if cell.value == 'base_stock_level':
                             base_stock_level_column = cell.column
@@ -230,11 +270,6 @@ def main():
                     
                     sheet.cell(row=i+2, column=base_stock_level_column, value=base_stock_level)
                     workbook.save(excel_path)
-
-                end_time = time.time()
-
-                elapsed_time = end_time - start_time
-                print(elapsed_time)
 
 
             if plot_train:
@@ -258,7 +293,8 @@ def main():
 
             if powell:
                 sq_path = os.path.join(full_path, 'powell')
-            #sq_path = os.path.join(full_path, 'brute_force_scipy')
+            if brute_force_scipy:
+                sq_path = os.path.join(full_path, 'brute_force_scipy')
             if brute_force_manual:
                 sq_path = os.path.join(full_path, 'brute_force_manual')
             os.makedirs(sq_path, exist_ok=True)
@@ -267,7 +303,7 @@ def main():
             Q_column = None
             if train:
 
-               
+                start_time = time.time()
                 if powell:
                     bnds = [(0, 10), (0, 10)]
                     # Eseguiamo l'ottimizzazione
@@ -280,12 +316,21 @@ def main():
                     print("Best Q:", np.around(res.x[1]))
                     print("Best average reward:", -res.fun)
 
-                    full_path = os.path.join(sq_path, 'pickle_file')
-                    os.makedirs(full_path, exist_ok=True)
-                    filename = os.path.join(full_path, f'best_s.pkl')
+                    end_time = time.time()
+
+                    elapsed_time = end_time - start_time
+                    print(elapsed_time)
+
+
+                    pickle_path = os.path.join(sq_path, 'pickle_file')
+                    os.makedirs(pickle_path, exist_ok=True)
+                    filename = os.path.join(pickle_path, f'time.pkl')
+                    with open(filename, 'wb') as f:
+                        pickle.dump(elapsed_time, f)
+                    filename = os.path.join(pickle_path, f'best_s.pkl')
                     with open(filename, 'wb') as f:
                             pickle.dump(res.x[0], f)
-                    filename = os.path.join(full_path, f'best_Q.pkl')
+                    filename = os.path.join(pickle_path, f'best_Q.pkl')
                     with open(filename, 'wb') as f:
                             pickle.dump(res.x[1], f) 
                     
@@ -293,10 +338,11 @@ def main():
                         if cell.value == 's':
                             s_column = cell.column
                             break
+                    for cell in sheet[1]:
                         if cell.value == 'Q':
                             Q_column = cell.column
                             break
-
+                    
                     if s_column is None:
                         # Creare la colonna base_stock_level se non esiste
                         s_column = sheet.max_column + 1
@@ -311,10 +357,67 @@ def main():
                     sheet.cell(row=i+2, column=Q_column, value=np.around(res.x[1]))
                     workbook.save(excel_path)
 
+                if brute_force_scipy:
+                    rranges = [slice(0, 10, 1), slice(0, 10, 1)]
+                    resbrute = optimize.brute(train_sQ.fun, rranges, args=(
+                        env,), full_output=True, finish=None)
+
+                    end_time = time.time()
+                    elapsed_time = end_time - start_time
+                    print(elapsed_time)
+                    print(resbrute[0])
+                    print(resbrute[1])
+                    print(resbrute[3])
+                    grid_values = resbrute[3]
+                    print(grid_values.size)
+                    print(resbrute[0][0])
+                    pickle_path = os.path.join(sq_path, 'pickle_file')
+                    os.makedirs(pickle_path, exist_ok=True)
+                    filename = os.path.join(pickle_path, f'time.pkl')
+                    with open(filename, 'wb') as f:
+                        pickle.dump(elapsed_time, f)
+                    filename = os.path.join(pickle_path, f'best_s.pkl')
+                    with open(filename, 'wb') as f:
+                            pickle.dump(resbrute[0][0], f)
+                    filename = os.path.join(pickle_path, f'best_Q.pkl')
+                    with open(filename, 'wb') as f:
+                            pickle.dump(resbrute[0][1], f) 
+                    
+                    for cell in sheet[1]:  # Assumendo che i titoli siano nella prima riga
+                        if cell.value == 's':
+                            s_column = cell.column
+                            break
+                    for cell in sheet[1]:
+                        if cell.value == 'Q':
+                            Q_column = cell.column
+                            break
+
+                    if s_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        s_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=s_column, value='s')
+                    if Q_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        Q_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=Q_column, value='Q')
+                
+                    
+                    sheet.cell(row=i+2, column=s_column, value=np.around(resbrute[0][0]))
+                    sheet.cell(row=i+2, column=Q_column, value=np.around(resbrute[0][1]))
+                    workbook.save(excel_path)
 
 
                 if brute_force_manual:
                     best_s, best_Q = train_sQ.train_sQ_policy(env, 0, 10, 0, 10, sq_path, total_timesteps)
+
+                    end_time = time.time()
+                    elapsed_time = end_time - start_time
+
+                    pickle_path = os.path.join(sq_path, 'pickle_file')
+                    os.makedirs(pickle_path, exist_ok=True)
+                    filename = os.path.join(pickle_path, f'time.pkl')
+                    with open(filename, 'wb') as f:
+                        pickle.dump(elapsed_time, f)
 
                     for cell in sheet[1]:  # Assumendo che i titoli siano nella prima riga
                         if cell.value == 's':
