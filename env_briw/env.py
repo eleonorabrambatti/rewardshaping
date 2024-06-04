@@ -1,15 +1,42 @@
 import gym
 import numpy as np
 from gym import spaces
+import logging
+import logging
 
+# Create a logger
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+# Create a logger
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class InventoryEnvGYConfig(gym.Env):
     def __init__(self, config, json_config):
         super(InventoryEnvGYConfig, self).__init__()
         # Action and observation spaces
-        self.action_space = spaces.Discrete(7)
-        # self.action_space = spaces.Box(low=np.array(
-        #    [0]), high=np.array([3]), dtype=np.float32)
+        self.mean_demand = config['mean_demand']
+        self.coef_of_var = config['coef_of_var']
+        self.shape = 1 / (self.coef_of_var ** 2)
+        self.scale = self.mean_demand / self.shape
+        simulated_demands = []
+        
+        demand = np.round(np.random.gamma(self.shape, self.scale, 10000)).astype(int)
+        simulated_demands.append(demand)
+
+        max_demand = np.max(simulated_demands)
+        logger.debug(f"max demand: {max_demand}")
+        if self.coef_of_var == 0.3:
+            max_demand = 5
+        if self.coef_of_var == 0.5:
+            max_demand = 6
+        if self.coef_of_var == 0.7:
+            max_demand = 6
+        self.action_space = spaces.Discrete(max_demand)
+        #self.action_space = spaces.Box(low=np.array(
+        #    [0]), high=np.array([max_demand]), dtype=np.float32)
         observation_length = (config['m'] + config['L'] - 1) + 2
         self.observation_space = spaces.Box(
             low=0, high=100, shape=(observation_length,), dtype=np.float32)
@@ -24,19 +51,10 @@ class InventoryEnvGYConfig(gym.Env):
         self.h = config['h']
         self.b = config['b']
         self.w = config['w']
-        # Demand distribution parameters
-        self.mean_demand = config['mean_demand']
-        self.coef_of_var = config['coef_of_var']
-        self.shape = 1 / (self.coef_of_var ** 2)
-        self.scale = self.mean_demand / self.shape
-        #self.base_stock_level = config['base_stock_level']
 
         #self.shaped = json_config['shaped']
         self.reward_shaping_rewards = json_config['reward_shaping_rewards']
         self.reward_shaping_actions = json_config['reward_shaping_actions']
-
-
-
 
         # Ensure all other necessary initializations are performed here
         self.reset()
@@ -65,83 +83,20 @@ class InventoryEnvGYConfig(gym.Env):
     def seed(self, seed=None):
         np.random.seed(seed)
 
-    def step_1(self, action):
-        # order_quantity = action[0]
-        order_quantity = np.around(action).astype(int)
-        # Generate total demand
-        self.demand = np.round(np.random.gamma(
-            self.shape, self.scale)).astype(int)
-        #if self.current_step < self.L:
-            # if order_quantity != 3:
-            #    print(f'order_quantity: {order_quantity}')
-        #    self.demand = 0
-        self.demand_history = self.demand
-        lost_demand = self.demand
-        # Satisfy  demand
-        for i in range(min(len(self.stock), self.m)):
-            if lost_demand > 0:
-                taken = min(self.stock[i], lost_demand)
-                self.stock[i] -= taken
-                lost_demand -= taken
-
-      # Calculate rewards and metrics
-        lost_sales = max(0, lost_demand)
-        expired = self.stock[0]
-        satisfied_demand = (self.demand - lost_sales)
-        # Sum only the first m elements
-        self.total_stock = np.sum(self.stock[:self.m])
-        reward = (self.p * (self.demand - lost_sales) -
-                  self.c * order_quantity - self.h * (self.total_stock) -
-                  self.b * lost_sales -
-                  self.w * (expired))
-
-        reward /= 100.0  # Divide the reward by 100
-        self.rewards_history.append(reward)  # Track the reward for each step
-
-        # Update the stock for the next period
-        self.stock = np.roll(self.stock, -1)
-        self.stock[-1] = order_quantity  # Add new order at the end
-        self.total_stock = np.sum(self.stock[:self.m])
-
-        # Calculate metrics for the items
-        info = {
-            'demand': self.demand_history,
-            'stock': np.sum(self.stock[:self.m]),
-            'in_transit': np.sum(self.stock[-self.L:]),  # in transit
-            'expired_items': expired,
-            'lost_sales': lost_sales,
-            'satisfied_demand': satisfied_demand,
-            'orders': order_quantity,
-            'reward': reward,  # Include current step's reward
-            # Calculate and include the standard deviation of rewards up to the current step
-            #'rewards_std': np.std(self.rewards_history) if self.rewards_history else
-        }
-        #print(info)
-        # if self.current_step < 2:
-        #    reward = 0
-        self.current_step += 1
-        # End episode after 10 steps or define your own condition
-        done = self.current_step >= 10
-        return self._next_observation(), reward, done, info
     
     def step(self, action):
-        print(f' current step: {self.current_step}')
+        logger.debug(f"current step: {self.current_step}")
         action_true = np.around(action).astype(int)
-        #print('qui entro')
 
         order_quantity = np.around(action).astype(int)
         if self.current_step > 9-self.L:
-            # if order_quantity != 3:
-            #    print(f'order_quantity: {order_quantity}')
             order_quantity = 0
-        print(f'order quantity: {order_quantity}')
+        logger.debug(f"order quantity: {order_quantity}")
         # Generate total demand
         self.demand = np.round(np.random.gamma(
             self.shape, self.scale)).astype(int)
         self.demand_history=self.demand
         if self.current_step < self.L:
-            # if order_quantity != 3:
-            #    print(f'order_quantity: {order_quantity}')
             self.demand = 0
 
         lost_demand = self.demand
@@ -157,8 +112,7 @@ class InventoryEnvGYConfig(gym.Env):
         lost_sales = max(0, lost_demand)
         expired = self.stock[0]
         satisfied_demand = (self.demand - lost_sales)
-        # Sum only the first m elements
-        self.total_stock = np.sum(self.stock[:self.m])
+        self.total_stock = np.sum(self.stock[:self.m]) # Sum only the first m elements
         reward = (self.p * (self.demand - lost_sales) -
                   self.c * order_quantity - self.h * (self.total_stock) -
                   self.b * lost_sales -
@@ -167,9 +121,7 @@ class InventoryEnvGYConfig(gym.Env):
         reward /= 100.0  # Divide the reward by 100
         self.rewards_history.append(reward)  # Track the reward for each step
 
-        #print(f'reward: {reward}')
-        #Aggiornamento rep, repu e repl
-                #if self.shaped:
+        logger.debug(f"reward: {reward}")
         
         if self.reward_shaping_rewards:
             reward = self.calculate_reward(self,reward)
@@ -178,9 +130,6 @@ class InventoryEnvGYConfig(gym.Env):
             reward = self.calculate_action_bs(
                 self.base_stock_level, self.stock,reward,order_quantity)
         
-
-
-        #print(f'reward shaped: {reward}')
         # Update the stock for the next period
         self.stock = np.roll(self.stock, -1)
         self.stock[-1] = order_quantity  # Add new order at the end
@@ -197,7 +146,7 @@ class InventoryEnvGYConfig(gym.Env):
             'orders': action_true,
             'reward': reward,  # Include current step's reward
             # Calculate and include the standard deviation of rewards up to the current step
-            #'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
+            'rewards_std': np.std(self.rewards_history) if self.rewards_history else 0
         }
         #print(info)
 
