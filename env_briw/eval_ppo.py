@@ -21,6 +21,8 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
        'rewards_std': [],
     }
     episodes = {key: [] for key in metrics}
+    metrics_sd= {key: [] for key in metrics}
+    std_devs= {key: [] for key in metrics}
     for episode in range(n_eval_episodes):
         obs = env.reset()
         done = False
@@ -51,6 +53,7 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
         
         # Calculate and aggregate episode metrics
             metrics[key].append(np.mean(episode_metrics[key]))
+            metrics_sd[key].append(episode_metrics[key])
 
     # Calculate average metrics over all episodes
     avg_metrics = {key: np.mean(value) for key, value in metrics.items()}
@@ -77,18 +80,31 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
             with open(filename, 'wb') as f:
                 pickle.dump(value, f)
 
+        for i in range(0,10):
+             values=[]
+             for k in range(0,len(metrics_sd[key])):
+                 values.append(metrics_sd[key][k][i])
+             std_values = np.std(values)
+             std_devs[key].append(std_values)
+
+        value=std_devs[key]
+        filename = os.path.join(full_path, f'{key}_std.pkl')
+        with open(filename, 'wb') as f:
+            pickle.dump(value, f)
+
 
 def save_metrics_to_dataframe(output_dir, config_details):
     subdir = 'pickle_file'
     full_path = os.path.join(output_dir, subdir)
     os.makedirs(full_path, exist_ok=True)
-
     subdir_avg_metrics = 'pickle_file/avg_metrics.pkl'
     subdir_avg_reward = 'pickle_file/avg_reward.pkl'
     subdir_std_reward = 'pickle_file/std_reward.pkl'
+    subdir_time = 'pickle_file/time.pkl'
     avg_metrics_path = os.path.join(output_dir, subdir_avg_metrics)    
     avg_reward_path = os.path.join(output_dir, subdir_avg_reward)
     std_reward_path = os.path.join(output_dir, subdir_std_reward)
+    time_path = os.path.join(output_dir, subdir_time)
 
     with open(avg_metrics_path, 'rb') as file:
         metrics_dict = pickle.load(file)
@@ -96,10 +112,14 @@ def save_metrics_to_dataframe(output_dir, config_details):
         avg_reward = pickle.load(file)
     with open(std_reward_path, 'rb') as file:
         std_reward = pickle.load(file)
+    with open(time_path, 'rb') as file:
+        time = pickle.load(file)
 
     metrics_dict['config_details'] = str(config_details)
     metrics_dict['avg_reward'] = avg_reward
     metrics_dict['std_reward'] = std_reward
+
+    metrics_dict['time'] = time
 
     filename='evaluation_metrics_ppo.csv'
     df = pd.DataFrame([metrics_dict])

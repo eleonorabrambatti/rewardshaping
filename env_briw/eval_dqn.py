@@ -103,9 +103,13 @@ def save_metrics_to_dataframe(output_dir, config_details):
     subdir_avg_metrics = 'pickle_file/avg_metrics.pkl'
     subdir_avg_reward = 'pickle_file/avg_reward.pkl'
     subdir_std_reward = 'pickle_file/std_reward.pkl'
+    subdir_time = 'pickle_file/time.pkl'
     avg_metrics_path = os.path.join(output_dir, subdir_avg_metrics)    
     avg_reward_path = os.path.join(output_dir, subdir_avg_reward)
     std_reward_path = os.path.join(output_dir, subdir_std_reward)
+    time_path = os.path.join(output_dir, subdir_time)
+    
+
 
     with open(avg_metrics_path, 'rb') as file:
         metrics_dict = pickle.load(file)
@@ -113,10 +117,13 @@ def save_metrics_to_dataframe(output_dir, config_details):
         avg_reward = pickle.load(file)
     with open(std_reward_path, 'rb') as file:
         std_reward = pickle.load(file)
+    with open(time_path, 'rb') as file:
+        time = pickle.load(file)
 
     metrics_dict['config_details'] = str(config_details)
     metrics_dict['avg_reward'] = avg_reward
     metrics_dict['std_reward'] = std_reward
+    metrics_dict['time'] = time
 
     filename='evaluation_metrics_dqn.csv'
     df = pd.DataFrame([metrics_dict])

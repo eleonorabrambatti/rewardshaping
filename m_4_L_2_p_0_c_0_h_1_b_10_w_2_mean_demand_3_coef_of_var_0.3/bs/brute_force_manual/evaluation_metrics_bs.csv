@@ -1,0 +1,2 @@
+demand,expired_items,stock,in_transit,lost_sales,satisfied_demand,orders,reward,reward_std,config_details,avg_reward,std_reward
+2.975,0.005,4.279999999999999,4.649999999999999,0.38,2.025,2.465,-0.05770000000000001,0.0,m_4_L_2_p_0_c_0_h_1_b_10_w_2_mean_demand_3_coef_of_var_0.3,-0.577,0.1993514484522247
