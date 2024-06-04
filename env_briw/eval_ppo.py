@@ -91,7 +91,26 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
         with open(filename, 'wb') as f:
                 pickle.dump(value, f)
 
+def evaluate_policy_and_log_detailed_metrics_2(model, env, n_eval_episodes=10):
 
+
+    total_rewards = []
+
+    for _ in range(n_eval_episodes):
+        obs = env.reset()
+        done = False
+        episode_rewards = 0
+        while not done:
+            action, _states = model.predict(obs, deterministic=True)
+            action=np.around(action).astype(int)
+            #print(f'action: {action}')
+            obs, reward, done, info = env.step(action)
+            episode_rewards += reward
+        total_rewards.append(episode_rewards)
+
+
+    avg_reward = np.mean(total_rewards)
+    return avg_reward
 
 def save_metrics_to_dataframe(output_dir, config_details):
     subdir = 'pickle_file'
