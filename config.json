@@ -1,5 +1,4 @@
 {
-    "shaped": false,
     "reward_shaping_rewards": false,
     "reward_shaping_actions": false
 }
