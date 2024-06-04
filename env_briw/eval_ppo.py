@@ -81,7 +81,6 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
 
 def evaluate_policy_and_log_detailed_metrics_2(model, env, n_eval_episodes=10):
 
-
     total_rewards = []
 
     for _ in range(n_eval_episodes):
