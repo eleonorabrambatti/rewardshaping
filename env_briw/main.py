@@ -1,7 +1,5 @@
 import pandas as pd
-import numpy as np
 import os
-import logging
 import openpyxl
 from env import InventoryEnvGYConfig
 import train_ppo
@@ -20,7 +18,7 @@ import pickle
 from stable_baselines3 import PPO
 from stable_baselines3 import DQN
 import scipy.optimize as optimize
-from scipy.optimize import Bounds
+import numpy as np
 from scipy.optimize import show_options
 from openpyxl import load_workbook
 import json
@@ -30,18 +28,22 @@ import json
 import scipy.optimize as optimize
 import numpy as np
 
-ppo = False
-dqn = True
+
+
+
+ppo = True
+dqn = False
 bs = False
 sq = False
+
 
 train = True
 plot_train = True
 eval = True
-plot_eval =True
+plot_eval = True
 
-powell =False
-brute_force_scipy = False
+powell = True
+brute_force_scipy = True
 brute_force_manual = False
 
 def main():
@@ -57,21 +59,21 @@ def main():
         json_config = json.load(file)
 
     # Adjust policy_kwargs and learning rate if needed
-    learning_rate = 0.0003
+    learning_rate =0.0001
     steps = list(range(1, 11))
     for i, config in enumerate(configurations):
-        config_details = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
+        config_details = "".join([f"{k}{v}" for k, v in config.items() if k != 'configuration'])
         output_dir = f'{config_details}'
         env = InventoryEnvGYConfig(config,json_config)
-        total_timesteps = 150000
+        total_timesteps =200000
         if ppo:
 
-            n_steps = 2048
-            batch_size = 128
-            n_epochs = 10
+            n_steps = 4096
+            batch_size = 64
+            n_epochs = 5
 
             subdir = 'ppo'
-            subdir_1 = f'lr_{learning_rate}_n_steps_{n_steps}_batch_size_{batch_size}_n_epochs_{n_epochs}'
+            subdir_1 = f'lr_{learning_rate}n_steps{n_steps}batch_size{batch_size}n_epochs{n_epochs}'
             full_path = os.path.join(output_dir, subdir, subdir_1)
             os.makedirs(full_path, exist_ok=True)
             # Train and evaluate the model
@@ -85,7 +87,7 @@ def main():
                 model_path = os.path.join(full_path, f"./logs/ppo_model")
 
                 model = PPO.load(model_path)
-                eval_ppo.evaluate_policy_and_log_detailed_metrics(model, env, full_path, n_eval_episodes=5)
+                eval_ppo.evaluate_policy_and_log_detailed_metrics(model, env, full_path, n_eval_episodes=100)
 
             if plot_eval:
                 eval_ppo.save_metrics_to_dataframe(full_path, config_details)
@@ -93,13 +95,13 @@ def main():
 
         elif dqn:
 
-            batch_size = 64
+            batch_size = 32
             buffer_size = 1000
             gradient_steps = 1
             target_update_interval = 1000
 
             subdir = 'dqn'
-            subdir_1 = f'lr_{learning_rate}_batch_size_{batch_size}_buffer_size_{buffer_size}_gradient_steps_{gradient_steps}_target_update_interval_{target_update_interval}'
+            subdir_1 = f'lr_{learning_rate}batch_size{batch_size}buffer_size{buffer_size}gradient_steps{gradient_steps}target_update_interval{target_update_interval}'
             full_path = os.path.join(output_dir, subdir, subdir_1)
             os.makedirs(full_path, exist_ok=True)
 
@@ -136,7 +138,7 @@ def main():
                 start_time = time.time()
 
                 if powell:
-                    np.random.seed(42)
+                    
                     bnds = [(5, 25)]
                     initial_guess = 5
                     res = optimize.minimize(train_BS.fun, initial_guess, args=(
@@ -255,15 +257,19 @@ def main():
 
             if powell:
                 sq_path = os.path.join(full_path, 'powell')
+            if brute_force_scipy:
+                sq_path = os.path.join(full_path, 'brute_force_scipy')
             #sq_path = os.path.join(full_path, 'brute_force_scipy')
             if brute_force_manual:
                 sq_path = os.path.join(full_path, 'brute_force_manual')
             os.makedirs(sq_path, exist_ok=True)
 
             s_column = None
-            Q_column = None
-            if train:
 
+            Q_column = None
+
+            if train:
+                start_time = time.time()
                
                 if powell:
                     bnds = [(0, 10), (0, 10)]
@@ -306,6 +312,51 @@ def main():
                     
                     sheet.cell(row=i+2, column=s_column, value=np.around(res.x[0]))
                     sheet.cell(row=i+2, column=Q_column, value=np.around(res.x[1]))
+                    workbook.save(excel_path)
+
+                if brute_force_scipy:
+                    rranges = [slice(0, 10, 1), slice(0, 10, 1)]
+                    resbrute = optimize.brute(train_sQ.fun, rranges, args=(
+                        env,), full_output=True, finish=None)
+
+                    end_time = time.time()
+                    elapsed_time = end_time - start_time
+                    print(elapsed_time)
+                    print(resbrute[0])
+                    print(resbrute[1])
+                    print(resbrute[3])
+                    grid_values = resbrute[3]
+                    print(grid_values.size)
+                    print(resbrute[0][0])
+                    full_path = os.path.join(sq_path, 'pickle_file')
+                    os.makedirs(full_path, exist_ok=True)
+                    filename = os.path.join(full_path, f'best_s.pkl')
+                    with open(filename, 'wb') as f:
+                            pickle.dump(resbrute[0][0], f)
+                    filename = os.path.join(full_path, f'best_Q.pkl')
+                    with open(filename, 'wb') as f:
+                            pickle.dump(resbrute[0][1], f) 
+                    
+                    for cell in sheet[1]:  # Assumendo che i titoli siano nella prima riga
+                        if cell.value == 's':
+                            s_column = cell.column
+                            break
+                        if cell.value == 'Q':
+                            Q_column = cell.column
+                            break
+
+                    if s_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        s_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=s_column, value='s')
+                    if Q_column is None:
+                        # Creare la colonna base_stock_level se non esiste
+                        Q_column = sheet.max_column + 1
+                        sheet.cell(row=1, column=Q_column, value='Q')
+                
+                    
+                    sheet.cell(row=i+2, column=s_column, value=np.around(resbrute[0][0]))
+                    sheet.cell(row=i+2, column=Q_column, value=np.around(resbrute[0][1]))
                     workbook.save(excel_path)
 
 
@@ -352,6 +403,3 @@ def main():
                 plot.plot_episodes_metrics(steps, sq_path)
            
 main()
-
-
-

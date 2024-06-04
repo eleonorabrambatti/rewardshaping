@@ -24,16 +24,16 @@ configurations = df_configurations.to_dict('records')
 with open(config_json_path, 'r') as file:
     json_config = json.load(file)
 
-ppo = False
-dqn=True
+ppo = True
+dqn=False
 
 steps = list(range(1, 11))
 # Define the search space for the GridSampler
 search_space = {
-    'learning_rate': [1e-4],
-    #'n_steps': [1024, 2048],
-    'batch_size': [32, 64],
-    #'n_epochs': [10, 20],
+    'learning_rate': [1e-5, 1e-4],
+    'n_steps': [ 2048, 4096],
+    'batch_size': [64,128],
+    'n_epochs': [5,10],
     'buffer_size': [1000],
     'gradient_steps': [1],
     'target_update_interval': [1000]
@@ -41,10 +41,10 @@ search_space = {
 # Define the objective function
 def objective(trial):
     # Suggest hyperparameters
-    learning_rate = trial.suggest_float('learning_rate', 1e-4,1e-3,0.001)
-    #n_steps = trial.suggest_float('n_steps', 1024, 2048, 1024)
-    batch_size = trial.suggest_categorical('batch_size', [32, 64])
-    #n_epochs = trial.suggest_float('n_epochs', 10, 20, 10)
+    learning_rate = trial.suggest_float('learning_rate', 3e-4,3e-3, step=0.00001)
+    n_steps = trial.suggest_float('n_steps', 2048, 4096, step=1024)
+    batch_size = trial.suggest_categorical('batch_size', [64,128])
+    n_epochs = trial.suggest_float('n_epochs', 5, 10, step=5)
     buffer_size = trial.suggest_categorical('buffer_size', [1000])
     gradient_steps = trial.suggest_categorical('gradient_steps', [1])
     target_update_interval = trial.suggest_categorical('target_update_interval', [1000])
@@ -54,7 +54,7 @@ def objective(trial):
     config_details = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
     output_dir = f'{config_details}'
     env = InventoryEnvGYConfig(config, json_config)
-    total_timesteps = 100000
+    total_timesteps = 200000
 
     if ppo:
         # Train the model
@@ -64,6 +64,7 @@ def objective(trial):
 
         # Evaluate the model
         mean_reward = eval_ppo.evaluate_policy_and_log_detailed_metrics_2(model, env, n_eval_episodes=100)
+        
     elif dqn:
         model = DQN('MlpPolicy', env, learning_rate=learning_rate, batch_size=batch_size, buffer_size=buffer_size, gradient_steps=gradient_steps,target_update_interval=target_update_interval,
                 exploration_final_eps=0.05)
@@ -76,7 +77,7 @@ def objective(trial):
 
 # Create a study with GridSampler and MedianPruner
 sampler = optuna.samplers.GridSampler(search_space)
-pruner = optuna.pruners.SuccessiveHalvingPruner(n_startup_trials=5)
+pruner = optuna.pruners.SuccessiveHalvingPruner()
 
 study = optuna.create_study(sampler=sampler, pruner=pruner, direction='maximize')
 study.optimize(objective, n_jobs=-1, show_progress_bar=True)

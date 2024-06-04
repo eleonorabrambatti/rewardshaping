@@ -8,6 +8,7 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
     subdir = 'pickle_file'
     full_path = os.path.join(output_dir, subdir)
     os.makedirs(full_path, exist_ok=True)
+
     total_rewards = []
     metrics = {
         'demand' : [],
@@ -21,6 +22,8 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
        'rewards_std': [],
     }
     episodes = {key: [] for key in metrics}
+    metrics_sd = {key: [] for key in metrics}
+    std_devs = {key: [] for key in metrics}
     for episode in range(n_eval_episodes):
         obs = env.reset()
         done = False
@@ -28,12 +31,10 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
         episode_metrics = {key: [] for key in metrics}
 
         while not done:
-            action, _states = model.predict(obs, deterministic=True)
+            action, _states = model.predict(obs, deterministic=False)
             action=np.around(action).astype(int)
-            print(f'action: {action}')
             obs, reward, done, info = env.step(action)
             episode_rewards += reward
-            
             # Accumulate metrics for each step
             for key in metrics:
                 if key == 'stock':
@@ -42,7 +43,7 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
                 else:
                     episode_metrics[key].append(info.get(key, 0))
         total_rewards.append(episode_rewards)
-        print(f'average reward: {np.mean(episode_rewards)}')
+    
 
         for key in metrics: 
             if episode == 0:
@@ -52,7 +53,7 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
         
         # Calculate and aggregate episode metrics
             metrics[key].append(np.mean(episode_metrics[key]))
-
+            metrics_sd[key].append(episode_metrics[key])
     # Calculate average metrics over all episodes
     avg_metrics = {key: np.mean(value) for key, value in metrics.items()}
     filename = os.path.join(full_path, f'avg_metrics.pkl')
@@ -71,12 +72,25 @@ def evaluate_policy_and_log_detailed_metrics(model, env, output_dir, n_eval_epis
     #print(f"Average Reward: {avg_reward}, Reward STD: {std_reward}")
     for key in episodes:
         episodes[key] = [x/n_eval_episodes for x in episodes[key]]
-     
+    
         if key != 'reward_std':
             value=episodes[key]
             filename = os.path.join(full_path, f'{key}.pkl')
             with open(filename, 'wb') as f:
                 pickle.dump(value, f)
+
+        for i in range(0,10):
+             values = []
+             for k in range(0,len(metrics_sd[key])):
+                values.append(metrics_sd[key][k][i])
+             std_values = np.std(values)
+             std_devs[key].append(std_values)
+        
+        value=std_devs[key]
+        filename = os.path.join(full_path, f'{key}_std.pkl')
+        with open(filename, 'wb') as f:
+                pickle.dump(value, f)
+
 
 
 def evaluate_policy_and_log_detailed_metrics_2(model, env, n_eval_episodes=10):
