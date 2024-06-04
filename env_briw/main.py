@@ -1,5 +1,7 @@
 import pandas as pd
+import numpy as np
 import os
+import logging
 import openpyxl
 from env import InventoryEnvGYConfig
 import train_ppo
@@ -18,7 +20,6 @@ import pickle
 from stable_baselines3 import PPO
 from stable_baselines3 import DQN
 import scipy.optimize as optimize
-import numpy as np
 from scipy.optimize import Bounds
 from scipy.optimize import show_options
 from openpyxl import load_workbook
@@ -30,12 +31,12 @@ import scipy.optimize as optimize
 import numpy as np
 
 ppo = False
-dqn = False
-bs = True
+dqn = True
+bs = False
 sq = False
 
 train = True
-plot_train = False
+plot_train = True
 eval = True
 plot_eval = True
 
@@ -62,7 +63,7 @@ def main():
         config_details = "_".join([f"{k}_{v}" for k, v in config.items() if k != 'configuration'])
         output_dir = f'{config_details}'
         env = InventoryEnvGYConfig(config,json_config)
-        total_timesteps = 2000
+        total_timesteps = 100000
         if ppo:
 
             n_steps = 500
@@ -103,7 +104,7 @@ def main():
 
         elif dqn:
 
-            batch_size = 32
+            batch_size = 64
             buffer_size = 1000
             gradient_steps = 1
             target_update_interval = 1000
